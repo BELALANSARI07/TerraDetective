@@ -8,6 +8,41 @@ const EXAMPLE_QUERIES = [
   "Track vegetation greening versus groundwater depletion"
 ];
 
+const CATEGORY_SHORTCUTS = [
+  { 
+    id: 'heat', 
+    emoji: '🌡️', 
+    name: 'Heat', 
+    desc: 'Surface Temp', 
+    preferred: ['LST_DAY', 'T2M', 'TS'],
+    activeClass: 'from-amber-500/20 to-orange-500/20 border-amber-500/80 text-amber-300'
+  },
+  { 
+    id: 'rain', 
+    emoji: '🌧️', 
+    name: 'Rain', 
+    desc: 'Precipitation', 
+    preferred: ['GPM_PRECIP', 'PRECTOTCORR'],
+    activeClass: 'from-blue-500/20 to-cyan-500/20 border-cyan-400 text-cyan-200'
+  },
+  { 
+    id: 'vegetation', 
+    emoji: '🌱', 
+    name: 'Vegetation', 
+    desc: 'Canopy NDVI', 
+    preferred: ['NDVI', 'MOD13A3'],
+    activeClass: 'from-emerald-500/20 to-teal-500/20 border-emerald-400 text-emerald-200'
+  },
+  { 
+    id: 'water', 
+    emoji: '💧', 
+    name: 'Groundwater', 
+    desc: 'Root-Zone Soil', 
+    preferred: ['GLDAS_ROOTMOIST', 'GWETROOT', 'GWETTOP'],
+    activeClass: 'from-cyan-500/20 to-indigo-500/20 border-indigo-400 text-indigo-200'
+  }
+];
+
 export default function CommandBar({
   onSelectVariable,
   onSelectPreset,
@@ -20,6 +55,17 @@ export default function CommandBar({
   const [isSearching, setIsSearching] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [guidance, setGuidance] = useState('');
+
+  const handleSelectCategory = (cat) => {
+    // Find best match in available variables
+    const availableIds = new Set(variables.map(v => v.identifier));
+    const target = cat.preferred.find(id => availableIds.has(id)) || cat.preferred[0];
+    onSelectVariable(target);
+  };
+
+  const isCategoryActive = (cat) => {
+    return cat.preferred.includes(selectedVariable);
+  };
 
   const handleSearch = async (e) => {
     e?.preventDefault();
@@ -53,6 +99,50 @@ export default function CommandBar({
 
   return (
     <div className="space-y-4">
+      {/* 4 Guided Earth System Category Pills */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            Quick Earth System Categories
+          </span>
+          <span className="text-[11px] text-slate-500 hidden sm:inline">
+            1-click auto-selects verified NASA observation satellite datasets
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {CATEGORY_SHORTCUTS.map((cat) => {
+            const active = isCategoryActive(cat);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleSelectCategory(cat)}
+                className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-left group relative overflow-hidden ${
+                  active
+                    ? `bg-gradient-to-r ${cat.activeClass} shadow-lg ring-1 ring-cyan-500/40`
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-750 hover:border-slate-700 text-slate-300'
+                }`}
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform">
+                  {cat.emoji}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                      {cat.name}
+                    </span>
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                  </div>
+                  <span className="text-[11px] text-slate-400 block truncate">
+                    {cat.desc}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Search Input Bar */}
       <div className="relative rounded-2xl bg-slate-900 border border-slate-750 p-2 shadow-xl">
         <form onSubmit={handleSearch} className="flex items-center gap-2">

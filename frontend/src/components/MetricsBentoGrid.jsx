@@ -1,7 +1,22 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Minus, CheckCircle, AlertTriangle, Compass, ShieldCheck, Activity } from 'lucide-react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  CheckCircle, 
+  AlertTriangle, 
+  Compass, 
+  ShieldCheck, 
+  Activity, 
+  Sparkles,
+  Thermometer,
+  CloudRain,
+  Sprout,
+  Droplets,
+  Calendar
+} from 'lucide-react';
 
-export default function MetricsBentoGrid({ analysisData }) {
+export default function MetricsBentoGrid({ analysisData, uxMode = 'story' }) {
   if (!analysisData) return null;
 
   const { metrics, detective_briefing, units, variable_name, location_label, data_source } = analysisData;
@@ -17,6 +32,157 @@ export default function MetricsBentoGrid({ analysisData }) {
     return <Minus className="w-5 h-5 text-slate-400" />;
   };
 
+  // Plain English Story Mode Cards
+  if (uxMode === 'story') {
+    const total25YearChange = slopeDecade != null ? (slopeDecade * 2.5).toFixed(1) : '0.0';
+    const isPositive = Number(total25YearChange) > 0;
+    const isNegative = Number(total25YearChange) < 0;
+
+    // Detect environmental domain
+    const varLower = (variable_name || '').toLowerCase();
+    const isHeat = varLower.includes('temp') || varLower.includes('t2m') || varLower.includes('lst');
+    const isRain = varLower.includes('precip') || varLower.includes('rain') || varLower.includes('gpm');
+    const isVeg = varLower.includes('ndvi') || varLower.includes('vegetation');
+    const isWater = varLower.includes('moist') || varLower.includes('gwet') || varLower.includes('water') || varLower.includes('swot');
+
+    let categoryIcon = <Sparkles className="w-5 h-5 text-cyan-400" />;
+    let categoryName = "Earth System Dynamic";
+    let impactText = "Long-term environmental trend detected across multi-decadal satellite observations.";
+
+    if (isHeat) {
+      categoryIcon = <Thermometer className="w-5 h-5 text-amber-400" />;
+      categoryName = "Thermal Climate Regime";
+      impactText = isPositive 
+        ? "Rising temperature trend: elevated thermal stress, prolonged heatwaves, and accelerated surface evaporation."
+        : "Cooling trend: lower land surface temperatures compared to the 2001 baseline.";
+    } else if (isRain) {
+      categoryIcon = <CloudRain className="w-5 h-5 text-blue-400" />;
+      categoryName = "Hydrological Cycle";
+      impactText = isPositive
+        ? "Surplus moisture: increased rainfall frequency with heightened potential for seasonal flooding."
+        : "Rainfall deficit: drying conditions with reduced atmospheric precipitation replenishment.";
+    } else if (isVeg) {
+      categoryIcon = <Sprout className="w-5 h-5 text-emerald-400" />;
+      categoryName = "Ecosystem Canopy";
+      impactText = isPositive
+        ? "Surface greening: increased canopy density from agricultural expansion or vegetation recovery."
+        : "Canopy browning: vegetation reduction, forest disturbance, or chronic moisture stress.";
+    } else if (isWater) {
+      categoryIcon = <Droplets className="w-5 h-5 text-cyan-400" />;
+      categoryName = "Sub-Surface Moisture";
+      impactText = isPositive
+        ? "Aquifer recharge: saturated root-zone moisture reserves supporting stable crop production."
+        : "Groundwater depletion: underground moisture deficit requiring active water resource conservation.";
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Story Card 1: 25-Year Total Change */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-850 to-slate-900 border border-slate-750 p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-cyan-400" />
+              25-Year Total Change (2001–2025)
+            </span>
+            {renderTrendIcon()}
+          </div>
+
+          <div className="my-4">
+            <div className="flex items-baseline gap-2">
+              <span className={`text-3xl lg:text-4xl font-extrabold font-mono tracking-tight ${
+                isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-slate-100'
+              }`}>
+                {isPositive ? `+${total25YearChange}` : total25YearChange}
+              </span>
+              <span className="text-sm font-mono text-cyan-300 font-semibold">{units}</span>
+            </div>
+            <p className="text-xs text-slate-300 mt-2 font-medium">
+              Net cumulative shift across the entire 25-year satellite record
+            </p>
+          </div>
+
+          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <span className="text-slate-400">Rate per Decade:</span>
+            <span className="font-mono font-bold text-slate-200">
+              {slopeDecade > 0 ? `+${slopeDecade}` : slopeDecade} {units}/10yr
+            </span>
+          </div>
+        </div>
+
+        {/* Story Card 2: Confidence Level */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-850 to-slate-900 border border-slate-750 p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              Confidence Level
+            </span>
+            {isSig ? (
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            ) : (
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+            )}
+          </div>
+
+          <div className="my-4">
+            {isSig ? (
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/90 text-emerald-300 border border-emerald-500/50 glow-emerald">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  Confirmed Long-Term Shift
+                </div>
+                <p className="text-xs text-slate-300 mt-2.5 font-medium leading-relaxed">
+                  95%+ statistical certainty — this shift is a genuine persistent climate trend, not random weather noise.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-950/90 text-amber-300 border border-amber-500/50 glow-amber">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  Normal Year-to-Year Swings
+                </div>
+                <p className="text-xs text-slate-300 mt-2.5 font-medium leading-relaxed">
+                  Within typical natural variation — satellite measurements show seasonal fluctuations without a persistent drift.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <span className="text-slate-400">Statistical Test:</span>
+            <span className="font-mono text-cyan-400">
+              {isSig ? 'Verified (p < 0.05)' : 'Inconclusive (p ≥ 0.05)'}
+            </span>
+          </div>
+        </div>
+
+        {/* Story Card 3: What It Means (Human & Ecological Impact) */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-850 to-slate-900 border border-slate-750 p-5 flex flex-col justify-between shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              {categoryIcon}
+              What It Means
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              {categoryName}
+            </span>
+          </div>
+
+          <div className="my-4">
+            <p className="text-xs text-slate-200 leading-relaxed font-sans">
+              {impactText}
+            </p>
+          </div>
+
+          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span className="text-slate-400 truncate max-w-[150px]">{location_label}</span>
+            <span className="text-emerald-400 font-semibold">{data_source?.split('(')[0] || 'NASA Earth'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Scientist Mode: Full Math Bento Grid
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Sen's Slope Card */}
@@ -151,3 +317,4 @@ export default function MetricsBentoGrid({ analysisData }) {
     </div>
   );
 }
+

@@ -1,7 +1,15 @@
 import React from 'react';
-import { ArrowRightLeft, AlertOctagon, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { ArrowRightLeft, AlertOctagon, CheckCircle2, AlertTriangle, Sparkles, ArrowRight, FlaskConical } from 'lucide-react';
 
-export default function DivergenceComparatorCard({ divergence, regionA, regionB, variableName, units }) {
+export default function DivergenceComparatorCard({
+  divergence,
+  regionA,
+  regionB,
+  variableName,
+  units,
+  uxMode = 'story',
+  onSwitchToScientistMode
+}) {
   if (!divergence) return null;
 
   const {
@@ -9,7 +17,9 @@ export default function DivergenceComparatorCard({ divergence, regionA, regionB,
     divergence_ratio,
     opposite_trends,
     divergence_severity,
-    comparative_verdict
+    comparative_verdict,
+    headline,
+    plain_summary
   } = divergence;
 
   const getSeverityBadge = () => {
@@ -34,8 +44,61 @@ export default function DivergenceComparatorCard({ divergence, regionA, regionB,
     );
   };
 
+  // --- STORY MODE CARD ---
+  if (uxMode === 'story') {
+    return (
+      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-cyan-500/30 p-6 shadow-2xl space-y-4 animate-fade-in relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Story Mode Top Tag */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-800/70 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              Climate Detective Story
+            </span>
+            <span className="text-xs text-slate-400">
+              {regionA?.location_label || 'Region A'} vs. {regionB?.location_label || 'Region B'}
+            </span>
+          </div>
+
+          {getSeverityBadge()}
+        </div>
+
+        {/* Big Bold Headline */}
+        <div className="space-y-2">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+            {headline || `${regionA?.location_label || 'Region A'} and ${regionB?.location_label || 'Region B'} are heading on opposite climate paths.`}
+          </h2>
+
+          {/* Plain English Summary */}
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-sans max-w-4xl">
+            {plain_summary || comparative_verdict}
+          </p>
+        </div>
+
+        {/* Action strip to switch to Scientist Mode */}
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs border-t border-slate-800/60">
+          <span className="text-slate-400 font-mono text-[11px]">
+            Observed 25-Year Trend Differential (2001–2025)
+          </span>
+
+          <button
+            onClick={onSwitchToScientistMode}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 font-semibold transition-all group"
+          >
+            <FlaskConical className="w-3.5 h-3.5 text-cyan-400" />
+            <span>View Scientific Proof & Formulas</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- SCIENTIST MODE CARD (Mathematical Rigor) ---
   return (
-    <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-750 p-5 shadow-xl space-y-4">
+    <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-750 p-5 shadow-xl space-y-4 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div className="flex items-center gap-2">

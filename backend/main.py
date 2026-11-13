@@ -326,7 +326,10 @@ def analyze_live(
         raw_values=clean_vals,
         stl=STLDecompositionData(**stl_dict),
         metrics=TrendMetrics(**mk_metrics),
-        detective_briefing=verdict
+        headline=getattr(verdict, "headline", None),
+        plain_summary=getattr(verdict, "plain_summary", None),
+        scientific_briefing=getattr(verdict, "scientific_briefing", str(verdict)),
+        detective_briefing=str(verdict)
     )
 
 @app.post("/api/analyze/region-compare", response_model=RegionalCompareResponse)
@@ -364,7 +367,10 @@ def compare_regions(req: RegionalCompareRequest):
         raw_values=clean_a,
         stl=STLDecompositionData(**stl_a),
         metrics=TrendMetrics(**mk_a),
-        detective_briefing=verdict_a
+        headline=getattr(verdict_a, "headline", None),
+        plain_summary=getattr(verdict_a, "plain_summary", None),
+        scientific_briefing=getattr(verdict_a, "scientific_briefing", str(verdict_a)),
+        detective_briefing=str(verdict_a)
     )
 
     # Region B analysis
@@ -393,7 +399,10 @@ def compare_regions(req: RegionalCompareRequest):
         raw_values=clean_b,
         stl=STLDecompositionData(**stl_b),
         metrics=TrendMetrics(**mk_b),
-        detective_briefing=verdict_b
+        headline=getattr(verdict_b, "headline", None),
+        plain_summary=getattr(verdict_b, "plain_summary", None),
+        scientific_briefing=getattr(verdict_b, "scientific_briefing", str(verdict_b)),
+        detective_briefing=str(verdict_b)
     )
 
     # Mathematical Divergence
@@ -409,7 +418,10 @@ def compare_regions(req: RegionalCompareRequest):
         label_a=req.region_a.label or "Region A",
         label_b=req.region_b.label or "Region B"
     )
-    divergence["comparative_verdict"] = briefing
+    divergence["comparative_verdict"] = str(briefing)
+    divergence["headline"] = getattr(briefing, "headline", None)
+    divergence["plain_summary"] = getattr(briefing, "plain_summary", None)
+    divergence["scientific_briefing"] = getattr(briefing, "scientific_briefing", str(briefing))
 
     return RegionalCompareResponse(
         variable=req.variable,

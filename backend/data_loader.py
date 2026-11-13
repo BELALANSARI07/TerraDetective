@@ -10,6 +10,55 @@ logger = logging.getLogger("terradetective.data_loader")
 
 MISSING_VALUE_FLAGS = {-999, -999.0, -9999, -9999.0, -9999.9, -999.9}
 
+CATALOG_METADATA_ENRICHMENT = {
+    "T2M": {"simple_label": "Surface Air Temperature", "category_icon": "heat"},
+    "T2M_MAX": {"simple_label": "Max Daytime Temperature", "category_icon": "heat"},
+    "T2M_MIN": {"simple_label": "Nighttime Temperature", "category_icon": "heat"},
+    "TS": {"simple_label": "Ground Skin Temperature", "category_icon": "heat"},
+    "LST": {"simple_label": "Land Surface Temperature", "category_icon": "heat"},
+    "LST_DAY": {"simple_label": "Daytime Land Temperature", "category_icon": "heat"},
+    "ALLSKY_SFC_SW_DWN": {"simple_label": "Solar Energy Sunlight", "category_icon": "heat"},
+    "CLRSKY_DAYS": {"simple_label": "Clear Sunny Days", "category_icon": "heat"},
+    "PRECTOTCORR": {"simple_label": "Monthly Rainfall Total", "category_icon": "rain"},
+    "GPM_PRECIP": {"simple_label": "Satellite Precipitation Rate", "category_icon": "rain"},
+    "GPM_IMERG": {"simple_label": "Satellite Rainfall Rate", "category_icon": "rain"},
+    "RH2M": {"simple_label": "Air Humidity Level", "category_icon": "rain"},
+    "QV2M": {"simple_label": "Atmospheric Moisture", "category_icon": "rain"},
+    "WS2M": {"simple_label": "Surface Wind Speed", "category_icon": "rain"},
+    "WS10M": {"simple_label": "High Wind Speed", "category_icon": "rain"},
+    "PS": {"simple_label": "Surface Air Pressure", "category_icon": "rain"},
+    "NDVI": {"simple_label": "Plant Canopy Greenness", "category_icon": "vegetation"},
+    "GWETTOP": {"simple_label": "Surface Soil Wetness", "category_icon": "water"},
+    "GWETROOT": {"simple_label": "Root-Zone Soil Water", "category_icon": "water"},
+    "GWETPROF": {"simple_label": "Deep Aquifer Moisture", "category_icon": "water"},
+    "GLDAS_ROOTMOIST": {"simple_label": "Subsurface Soil Moisture", "category_icon": "water"},
+    "SOILMOIST": {"simple_label": "Soil Moisture Storage", "category_icon": "water"},
+    "GROUNDWATER": {"simple_label": "Groundwater Level", "category_icon": "water"},
+    "T2MDEW": {"simple_label": "Dew Point Temperature", "category_icon": "water"},
+    "EVLAND": {"simple_label": "Land Evaporation Rate", "category_icon": "water"},
+    "DISCHARGE": {"simple_label": "River Water Runoff", "category_icon": "water"},
+    "SNOWDP": {"simple_label": "Snowpack Depth", "category_icon": "water"},
+    "SWOT": {"simple_label": "Surface Water Elevation", "category_icon": "water"}
+}
+
+def enrich_variable_dict(v: Dict[str, Any]) -> Dict[str, Any]:
+    ident = v.get("identifier", "").upper().strip()
+    enrich = CATALOG_METADATA_ENRICHMENT.get(ident, {})
+    if "simple_label" not in v or not v["simple_label"]:
+        v["simple_label"] = enrich.get("simple_label", v.get("name", ident))
+    if "category_icon" not in v or not v["category_icon"]:
+        cat = v.get("category", "").lower()
+        if "therm" in cat or "temp" in cat or "solar" in cat:
+            default_icon = "heat"
+        elif "precip" in cat or "rain" in cat or "wind" in cat or "humid" in cat:
+            default_icon = "rain"
+        elif "bio" in cat or "veg" in cat or "canopy" in cat:
+            default_icon = "vegetation"
+        else:
+            default_icon = "water"
+        v["category_icon"] = enrich.get("category_icon", default_icon)
+    return v
+
 class DataLoader:
     def __init__(self, data_dir: Optional[str] = None):
         if data_dir is None:
@@ -142,8 +191,9 @@ class DataLoader:
         return df
 
     def get_catalog_variables(self) -> List[Dict[str, Any]]:
-        """Returns the list of 20 NASA POWER variables from the catalog."""
-        return self.catalog.get("variables", [])
+        """Returns the list of 20 NASA POWER variables from the catalog with Story Mode metadata."""
+        vars_list = self.catalog.get("variables", [])
+        return [enrich_variable_dict(dict(v)) for v in vars_list]
 
     def get_variable_metadata(self, identifier: str) -> Optional[Dict[str, Any]]:
         """Finds metadata for a specific variable by identifier (e.g. 'T2M', 'TS', 'NDVI')."""
@@ -151,13 +201,15 @@ class DataLoader:
         # Check standard NASA POWER catalog
         for var in self.catalog.get("variables", []):
             if var.get("identifier", "").upper() == ident_clean:
-                return var
+                return enrich_variable_dict(dict(var))
 
         # Local datasets metadata overrides
         local_meta = {
             "NDVI": {
                 "identifier": "NDVI",
                 "name": "MODIS Normalized Difference Vegetation Index (1km)",
+                "simple_label": "Plant Canopy Greenness",
+                "category_icon": "vegetation",
                 "units": "index (-0.2 to 1.0)",
                 "category": "Biosphere / Vegetation",
                 "description": "MODIS MOD13A3 1km Monthly Normalized Difference Vegetation Index measuring canopy greenness and photosynthetic activity.",
@@ -168,6 +220,8 @@ class DataLoader:
             "LST_DAY": {
                 "identifier": "LST_DAY",
                 "name": "MODIS Land Surface Temperature Day (1km)",
+                "simple_label": "Daytime Land Temperature",
+                "category_icon": "heat",
                 "units": "K",
                 "category": "Thermal / Surface",
                 "description": "MODIS MOD11A2 8-day 1km Daytime Land Surface Temperature aggregated to monthly mean.",
@@ -178,6 +232,8 @@ class DataLoader:
             "GPM_PRECIP": {
                 "identifier": "GPM_PRECIP",
                 "name": "GPM IMERG Final Run Monthly Precipitation",
+                "simple_label": "Satellite Precipitation Rate",
+                "category_icon": "rain",
                 "units": "mm/hr",
                 "category": "Hydrology / Precipitation",
                 "description": "Global Precipitation Measurement (GPM) IMERG Final Precipitation L3 1 month 0.1 degree x 0.1 degree area-averaged time series.",
@@ -188,6 +244,8 @@ class DataLoader:
             "GLDAS_ROOTMOIST": {
                 "identifier": "GLDAS_ROOTMOIST",
                 "name": "GLDAS Noah Root Zone Soil Moisture (0-100cm)",
+                "simple_label": "Subsurface Soil Moisture",
+                "category_icon": "water",
                 "units": "kg/m^2",
                 "category": "Hydrology / Soil Moisture",
                 "description": "GLDAS Noah Land Surface Model 0.25 degree monthly root-zone soil water storage (0-100cm).",
@@ -196,7 +254,8 @@ class DataLoader:
                 "primary_sat_model": "NASA GES DISC GLDAS Noah v2.1"
             }
         }
-        return local_meta.get(ident_clean)
+        res = local_meta.get(ident_clean)
+        return enrich_variable_dict(dict(res)) if res else None
 
     def extract_modis_timeseries(self, product: str, location_id: str) -> Tuple[List[str], List[float], Dict[str, Any]]:
         """

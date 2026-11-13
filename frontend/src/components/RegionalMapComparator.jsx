@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { MapPin, ArrowRightLeft, Layers, Sliders } from 'lucide-react';
+import { MapPin, ArrowRightLeft, Layers, Sliders, Sparkles, Compass } from 'lucide-react';
 
 // Fix Leaflet marker icons in Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -26,6 +26,90 @@ const createCustomMarker = (color) => {
     iconAnchor: [7, 7]
   });
 };
+
+// Pulsing Climate Mystery marker
+const createMysteryMarker = () => {
+  return L.divIcon({
+    className: 'mystery-map-marker',
+    html: `<div style="
+      background: radial-gradient(circle, #F59E0B 0%, #D97706 70%, rgba(245, 158, 11, 0) 100%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 12px #F59E0B, 0 0 18px rgba(245, 158, 11, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    "><span style="font-size: 10px; line-height: 1; color: #FFFFFF; font-weight: bold;">★</span></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+};
+
+export const CLIMATE_MYSTERIES = [
+  {
+    id: 'punjab',
+    name: 'Punjab Breadbasket',
+    emoji: '🌾',
+    subtitle: 'Irrigation Greening Paradox',
+    latA: 31.1471, lonA: 75.3412, labelA: 'Punjab (Intensive Tube-well Irrigation)',
+    latB: 26.9124, lonB: 70.9000, labelB: 'Thar Desert (Natural Baseline)',
+    variable: 'GLDAS_ROOTMOIST',
+    desc: 'Surface farms appear green and thriving, but underground aquifers are depleting rapidly.'
+  },
+  {
+    id: 'amazon',
+    name: 'Amazon Deforestation',
+    emoji: '🔥',
+    subtitle: 'Evaporative Cooling Loss',
+    latA: -10.8261, lonA: -61.9311, labelA: 'Rondônia Deforestation Frontier',
+    latB: -3.4653, lonB: -62.2159, labelB: 'Central Amazon Primary Canopy',
+    variable: 'LST_DAY',
+    desc: 'Clearing rainforest canopies collapses local transpiration, warming land surface by +3°C to +5°C.'
+  },
+  {
+    id: 'marathwada',
+    name: 'Marathwada Drought',
+    emoji: '☀️',
+    subtitle: 'Rain-Shadow Aridity',
+    latA: 19.0368, lonA: 75.7139, labelA: 'Marathwada Rain-Shadow Basin',
+    latB: 16.9902, lonB: 73.3120, labelB: 'Konkan Coast (Monsoon Influx)',
+    variable: 'PRECTOTCORR',
+    desc: 'Western Ghats orographic barrier leaves Marathwada prone to structural drought.'
+  },
+  {
+    id: 'meghalaya',
+    name: 'Northeast Monsoon Zone',
+    emoji: '🌧️',
+    subtitle: 'Orographic Wet Extreme',
+    latA: 25.2702, lonA: 91.7323, labelA: 'Cherrapunji (Orographic Wet Peak)',
+    latB: 26.2006, lonB: 92.9376, labelB: 'Brahmaputra Valley Baseline',
+    variable: 'GPM_PRECIP',
+    desc: 'The world’s wettest rainfall regime shifting toward more volatile, localized rainbursts.'
+  },
+  {
+    id: 'sahel',
+    name: 'Sahel Transition Belt',
+    emoji: '🌱',
+    subtitle: 'Desert Margin Greening',
+    latA: 14.5000, lonA: 2.1000, labelA: 'Sahel Semi-Arid Transition',
+    latB: 9.5000, lonB: 2.5000, labelB: 'Sub-Humid Savannah Zone',
+    variable: 'NDVI',
+    desc: 'Erratic re-greening pulses alongside structural topsoil vulnerability on desert margins.'
+  },
+  {
+    id: 'central_valley',
+    name: 'California Central Valley',
+    emoji: '💧',
+    subtitle: 'Aquifer Subsidence Hotspot',
+    latA: 36.7468, lonA: -119.7726, labelA: 'San Joaquin Valley (Ag Pumped)',
+    latB: 37.8651, lonB: -119.5383, labelB: 'Sierra Nevada (Snowmelt Basin)',
+    variable: 'GWETROOT',
+    desc: 'Intense agricultural groundwater extraction during mega-droughts triggering land subsidence.'
+  }
+];
 
 // Tile Layer presets (100% Free, Zero API Keys, No Credit Card)
 const TILE_LAYERS = {
@@ -55,7 +139,8 @@ export default function RegionalMapComparator({
   onChangeVariable,
   variables = [],
   onExecuteAnalysis,
-  isLoading
+  isLoading,
+  uxMode = 'story'
 }) {
   const [activeTileType, setActiveTileType] = React.useState('satellite');
   const mapRefA = useRef(null);
@@ -66,6 +151,16 @@ export default function RegionalMapComparator({
   const tileLayerB = useRef(null);
   const markerA = useRef(null);
   const markerB = useRef(null);
+  const mysteryGroupA = useRef(null);
+  const mysteryGroupB = useRef(null);
+
+  const loadMystery = (m) => {
+    onChangeRegionA({ latitude: m.latA, longitude: m.lonA, label: m.labelA });
+    onChangeRegionB({ latitude: m.latB, longitude: m.lonB, label: m.labelB });
+    if (m.variable) {
+      onChangeVariable(m.variable);
+    }
+  };
 
   // Initialize Map A
   useEffect(() => {
@@ -89,6 +184,32 @@ export default function RegionalMapComparator({
       icon: createCustomMarker('#38BDF8')
     }).addTo(map);
     markerA.current = m;
+
+    // Add mystery markers to Map A
+    const mysteriesLayer = L.layerGroup().addTo(map);
+    CLIMATE_MYSTERIES.forEach((mystery) => {
+      const pin = L.marker([mystery.latA, mystery.lonA], {
+        icon: createMysteryMarker()
+      }).addTo(mysteriesLayer);
+
+      pin.bindTooltip(`
+        <div style="padding: 4px; font-family: system-ui, sans-serif;">
+          <div style="font-weight: 800; color: #F59E0B; font-size: 12px;">★ ${mystery.name}</div>
+          <div style="font-size: 11px; color: #E2E8F0; margin-top: 2px;">${mystery.desc}</div>
+          <div style="font-size: 10px; color: #38BDF8; margin-top: 4px; font-weight: bold;">Click to investigate this climate mystery →</div>
+        </div>
+      `, {
+        direction: 'top',
+        className: 'leaflet-tooltip-dark',
+        offset: [0, -10]
+      });
+
+      pin.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        loadMystery(mystery);
+      });
+    });
+    mysteryGroupA.current = mysteriesLayer;
 
     map.on('click', (e) => {
       const lat = parseFloat(e.latlng.lat.toFixed(4));
@@ -127,6 +248,32 @@ export default function RegionalMapComparator({
       icon: createCustomMarker('#F43F5E')
     }).addTo(map);
     markerB.current = m;
+
+    // Add mystery markers to Map B
+    const mysteriesLayerB = L.layerGroup().addTo(map);
+    CLIMATE_MYSTERIES.forEach((mystery) => {
+      const pin = L.marker([mystery.latB, mystery.lonB], {
+        icon: createMysteryMarker()
+      }).addTo(mysteriesLayerB);
+
+      pin.bindTooltip(`
+        <div style="padding: 4px; font-family: system-ui, sans-serif;">
+          <div style="font-weight: 800; color: #F59E0B; font-size: 12px;">★ ${mystery.name} (Comparator)</div>
+          <div style="font-size: 11px; color: #E2E8F0; margin-top: 2px;">${mystery.desc}</div>
+          <div style="font-size: 10px; color: #F43F5E; margin-top: 4px; font-weight: bold;">Click to investigate this climate mystery →</div>
+        </div>
+      `, {
+        direction: 'top',
+        className: 'leaflet-tooltip-dark',
+        offset: [0, -10]
+      });
+
+      pin.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        loadMystery(mystery);
+      });
+    });
+    mysteryGroupB.current = mysteriesLayerB;
 
     map.on('click', (e) => {
       const lat = parseFloat(e.latlng.lat.toFixed(4));
@@ -183,8 +330,40 @@ export default function RegionalMapComparator({
 
   return (
     <div className="rounded-2xl bg-slate-900 border border-slate-750 p-4 shadow-xl space-y-4 isolate relative z-0">
+      {/* 6 Interactive Climate Mystery Strip */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            Interactive Climate Mystery Pins (Click Any To Investigate)
+          </span>
+          <span className="text-[11px] text-slate-500 hidden md:inline">
+            Pins are also rendered directly on the satellite globe below
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {CLIMATE_MYSTERIES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => loadMystery(m)}
+              className="flex flex-col text-left p-2.5 rounded-xl bg-slate-850/80 hover:bg-slate-800 border border-slate-750 hover:border-amber-500/50 transition-all group relative overflow-hidden"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-sm">{m.emoji}</span>
+                <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors truncate">
+                  {m.name.split(' ')[0]}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 truncate font-mono">
+                {m.subtitle}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Control Strip */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800 pt-1">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-cyan-400" />
           <span className="font-bold text-sm text-white">Dual-Region Comparator & Global Coordinate Inspector</span>
@@ -216,15 +395,15 @@ export default function RegionalMapComparator({
             className="bg-slate-800 border border-slate-700 text-cyan-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"
           >
             <optgroup label="Local Verified Satellite Data">
-              <option value="NDVI">MODIS NDVI (MOD13A3 Vegetation Index)</option>
-              <option value="LST_DAY">MODIS LST Day (MOD11A2 Land Temp)</option>
-              <option value="GPM_PRECIP">GPM IMERG Final (Giovanni Monthly Precip)</option>
-              <option value="GLDAS_ROOTMOIST">GLDAS Noah (GES DISC Root Zone Moisture)</option>
+              <option value="NDVI">MODIS NDVI (Vegetation Greenness Index)</option>
+              <option value="LST_DAY">MODIS LST Day (Land Surface Temperature)</option>
+              <option value="GPM_PRECIP">GPM IMERG Final (Satellite Precipitation)</option>
+              <option value="GLDAS_ROOTMOIST">GLDAS Noah (Root-Zone Soil Moisture)</option>
             </optgroup>
             <optgroup label="NASA POWER 20-Variable Catalog">
               {variables.map((v) => (
                 <option key={v.identifier} value={v.identifier}>
-                  {v.identifier} — {v.name} ({v.units})
+                  {v.simple_label || v.name} ({v.identifier})
                 </option>
               ))}
             </optgroup>
@@ -255,7 +434,7 @@ export default function RegionalMapComparator({
           </div>
           <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner isolate z-0">
             <div ref={mapRefA} className="w-full h-full" />
-            <div className="absolute top-2 left-2 z-[400] bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-cyan-300 border border-slate-800">
+            <div className="absolute top-2 left-2 z-10 bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-cyan-300 border border-slate-800">
               Region A Primary Pin
             </div>
           </div>
@@ -274,7 +453,7 @@ export default function RegionalMapComparator({
           </div>
           <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner isolate z-0">
             <div ref={mapRefB} className="w-full h-full" />
-            <div className="absolute top-2 left-2 z-[400] bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-rose-300 border border-slate-800">
+            <div className="absolute top-2 left-2 z-10 bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-rose-300 border border-slate-800">
               Region B Comparator Pin
             </div>
           </div>

@@ -7,13 +7,24 @@ export default function PlotlyTimeseriesChart({
   regionBData,
   selectedVariable,
   variableName,
-  units
+  units,
+  uxMode = 'story'
 }) {
   const chartContainerRef = useRef(null);
   const [showRaw, setShowRaw] = useState(true);
   const [showTrend, setShowTrend] = useState(true);
   const [showSeasonal, setShowSeasonal] = useState(false);
   const [showResidual, setShowResidual] = useState(false);
+
+  // Auto-reset seasonal/residual when switching into Story Mode
+  useEffect(() => {
+    if (uxMode === 'story') {
+      setShowSeasonal(false);
+      setShowResidual(false);
+      setShowTrend(true);
+      setShowRaw(true);
+    }
+  }, [uxMode]);
 
   useEffect(() => {
     if (!chartContainerRef.current || !regionAData) return;
@@ -160,11 +171,13 @@ export default function PlotlyTimeseriesChart({
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-cyan-400" />
             <h3 className="font-bold text-sm text-white">
-              {variableName || selectedVariable} — STL Loess Deseasonalized Analysis
+              {variableName || selectedVariable} — {uxMode === 'story' ? '25-Year Underlying Climate Trend (2001–2025)' : 'STL Loess Deseasonalized Analysis'}
             </h3>
           </div>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            12-month Loess Period Decomposition & Mann-Kendall Sen's Slope
+            {uxMode === 'story'
+              ? 'Smoothed multi-decadal trend trajectory isolating persistent signals from seasonal variation'
+              : '12-month Loess Period Decomposition (Tt + St + Rt) & Mann-Kendall Sen\'s Slope'}
           </p>
         </div>
 
@@ -178,7 +191,7 @@ export default function PlotlyTimeseriesChart({
                 : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
             }`}
           >
-            Raw Monthly
+            {uxMode === 'story' ? 'Monthly Observations' : 'Raw Monthly'}
           </button>
           <button
             onClick={() => setShowTrend(!showTrend)}
@@ -188,28 +201,33 @@ export default function PlotlyTimeseriesChart({
                 : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
             }`}
           >
-            STL Trendline
+            {uxMode === 'story' ? 'Climate Trend' : 'STL Trendline (Tt)'}
           </button>
-          <button
-            onClick={() => setShowSeasonal(!showSeasonal)}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all ${
-              showSeasonal
-                ? 'bg-emerald-950/80 border-emerald-400 text-emerald-300'
-                : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
-            }`}
-          >
-            Seasonal (12-Mo)
-          </button>
-          <button
-            onClick={() => setShowResidual(!showResidual)}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all ${
-              showResidual
-                ? 'bg-amber-950/80 border-amber-400 text-amber-300'
-                : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
-            }`}
-          >
-            Residual Anomalies
-          </button>
+
+          {uxMode === 'scientist' && (
+            <>
+              <button
+                onClick={() => setShowSeasonal(!showSeasonal)}
+                className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all ${
+                  showSeasonal
+                    ? 'bg-emerald-950/80 border-emerald-400 text-emerald-300'
+                    : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
+                }`}
+              >
+                Seasonal (St)
+              </button>
+              <button
+                onClick={() => setShowResidual(!showResidual)}
+                className={`px-2.5 py-1 rounded-lg border text-xs font-mono transition-all ${
+                  showResidual
+                    ? 'bg-amber-950/80 border-amber-400 text-amber-300'
+                    : 'bg-slate-900/60 border-slate-750 text-slate-500 hover:text-slate-400'
+                }`}
+              >
+                Residual (Rt)
+              </button>
+            </>
+          )}
         </div>
       </div>
 

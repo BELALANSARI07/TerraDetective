@@ -15,6 +15,7 @@ export default function App() {
   const [presets, setPresets] = useState([]);
   const [selectedPresetId, setSelectedPresetId] = useState('amazon_deforestation_warming');
   const [selectedVariable, setSelectedVariable] = useState('LST_DAY');
+  const [uxMode, setUxMode] = useState('story');
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
   const [isEarthdataCloudOpen, setIsEarthdataCloudOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -158,6 +159,8 @@ export default function App() {
         health={health}
         onOpenMethodology={() => setIsMethodologyOpen(true)}
         onOpenEarthdataCloud={() => setIsEarthdataCloudOpen(true)}
+        uxMode={uxMode}
+        onChangeUxMode={setUxMode}
       />
 
       {/* Main Workbench Body */}
@@ -199,6 +202,7 @@ export default function App() {
           variables={variables}
           onExecuteAnalysis={() => runAnalysis()}
           isLoading={isLoading}
+          uxMode={uxMode}
         />
 
         {/* Divergence Diagnosis Banner */}
@@ -209,6 +213,8 @@ export default function App() {
             regionB={analysisB}
             variableName={analysisA?.variable_name || selectedVariable}
             units={analysisA?.units || ''}
+            uxMode={uxMode}
+            onSwitchToScientistMode={() => setUxMode('scientist')}
           />
         )}
 
@@ -219,6 +225,7 @@ export default function App() {
           selectedVariable={selectedVariable}
           variableName={analysisA?.variable_name}
           units={analysisA?.units || ''}
+          uxMode={uxMode}
         />
 
         {/* High-Density Bento Grid Metrics: Region A */}
@@ -226,13 +233,13 @@ export default function App() {
           <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
             <span className="flex items-center gap-1.5 text-cyan-400">
               <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-cyan-400/30" />
-              Primary Analysis Diagnostics — {analysisA?.location_label || 'Region A'}
+              {uxMode === 'story' ? 'Human & Ecological Impact' : 'Primary Analysis Diagnostics'} — {analysisA?.location_label || 'Region A'}
             </span>
             <span className="text-slate-500 font-mono text-[11px]">
-              Mann-Kendall Rank Test & Loess Residuals
+              {uxMode === 'story' ? '25-Year Observation Record' : 'Mann-Kendall Rank Test & Loess Residuals'}
             </span>
           </div>
-          <MetricsBentoGrid analysisData={analysisA} />
+          <MetricsBentoGrid analysisData={analysisA} uxMode={uxMode} />
         </div>
 
         {/* High-Density Bento Grid Metrics: Region B (Comparator) */}
@@ -241,13 +248,13 @@ export default function App() {
             <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
               <span className="flex items-center gap-1.5 text-rose-400">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-rose-400/30" />
-                Comparative Diagnostics — {analysisB?.location_label || 'Region B'}
+                {uxMode === 'story' ? 'Comparator Region Impact' : 'Comparative Diagnostics'} — {analysisB?.location_label || 'Region B'}
               </span>
               <span className="text-slate-500 font-mono text-[11px]">
-                Opposing Regional Trend Counterpart
+                {uxMode === 'story' ? 'Opposing Climate Baseline' : 'Opposing Regional Trend Counterpart'}
               </span>
             </div>
-            <MetricsBentoGrid analysisData={analysisB} />
+            <MetricsBentoGrid analysisData={analysisB} uxMode={uxMode} />
           </div>
         )}
       </main>

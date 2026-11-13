@@ -2,7 +2,7 @@ import os
 import re
 import json
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import httpx
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -13,6 +13,25 @@ logger = logging.getLogger("terradetective.ai_detective")
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 TARGET_OLLAMA_MODEL = "qwen3:8b"
+
+class VerdictResult(str):
+    """
+    Subclasses str for 100% backward compatibility with all existing string assertions,
+    while providing structured Story Mode attributes: headline, plain_summary, scientific_briefing.
+    """
+    def __new__(cls, scientific_briefing: str, headline: str = "", plain_summary: str = ""):
+        instance = super().__new__(cls, scientific_briefing)
+        instance.scientific_briefing = scientific_briefing
+        instance.headline = headline
+        instance.plain_summary = plain_summary
+        return instance
+
+    def to_dict(self) -> Dict[str, str]:
+        return {
+            "headline": self.headline,
+            "plain_summary": self.plain_summary,
+            "scientific_briefing": self.scientific_briefing
+        }
 
 class AIDetective:
     def __init__(self, catalog_variables: List[Dict[str, Any]]):
@@ -36,6 +55,8 @@ class AIDetective:
             {
                 "identifier": "NDVI",
                 "name": "MODIS Normalized Difference Vegetation Index",
+                "simple_label": "Plant Canopy Greenness",
+                "category_icon": "vegetation",
                 "units": "index",
                 "category": "Biosphere / Vegetation",
                 "description": "Vegetation canopy density, leaf area index, crop health, forest cover, deforestation, greening trends.",
@@ -46,6 +67,8 @@ class AIDetective:
             {
                 "identifier": "LST_DAY",
                 "name": "MODIS Daytime Land Surface Temperature",
+                "simple_label": "Daytime Land Temperature",
+                "category_icon": "heat",
                 "units": "K",
                 "category": "Thermal / Surface",
                 "description": "Direct radiative surface skin temperature, urban heat island, deforestation warming, thermal shock.",
@@ -56,6 +79,8 @@ class AIDetective:
             {
                 "identifier": "GPM_PRECIP",
                 "name": "GPM IMERG High-Resolution Precipitation",
+                "simple_label": "Satellite Precipitation Rate",
+                "category_icon": "rain",
                 "units": "mm/hr",
                 "category": "Hydrology / Precipitation",
                 "description": "Satellite radar and microwave precipitation estimates, cloudbursts, monsoon divergence, meteorological drought.",
@@ -66,6 +91,8 @@ class AIDetective:
             {
                 "identifier": "GLDAS_ROOTMOIST",
                 "name": "GLDAS Noah Root Zone Soil Moisture",
+                "simple_label": "Subsurface Soil Moisture",
+                "category_icon": "water",
                 "units": "kg/m^2",
                 "category": "Hydrology / Groundwater",
                 "description": "Subsurface root zone water content (0-100cm), deep aquifer recharge, agricultural water depletion.",
@@ -203,6 +230,8 @@ class AIDetective:
             results.append({
                 "identifier": var.get("identifier"),
                 "name": var.get("name"),
+                "simple_label": var.get("simple_label", var.get("name")),
+                "category_icon": var.get("category_icon", "heat"),
                 "units": var.get("units", ""),
                 "category": var.get("category", ""),
                 "description": var.get("description", ""),
@@ -223,16 +252,14 @@ class AIDetective:
         variable_meta: Dict[str, Any],
         label_a: str = "Region A",
         label_b: str = "Region B"
-    ) -> str:
+    ) -> VerdictResult:
         """
-        Local Scientific Verdict Generator using 'qwen3:8b' via Ollama REST API.
-        Sends a structured prompt to http://localhost:11434/api/chat with timeout=4.0s.
-        Instructs qwen3:8b to produce exactly 3 crisp, objective scientific sentences:
-          1. Variable changed & physical mechanism driving divergence.
-          2. Exact decadal rates of change (Sen's Slope / decade).
-          3. Whether shifts are statistically significant (Mann-Kendall p < 0.05).
-        Resilient Fallback: If Ollama times out or is offline, automatically returns
-        a deterministic, template-synthesized 3-sentence summary with exact numbers.
+        Dual-Mode Local Scientific Verdict Generator using 'qwen3:8b' via Ollama REST API.
+        Sends a structured prompt requesting a JSON object with:
+          - headline: Plain-English human-impact takeaway (8th-grade level, zero jargon).
+          - plain_summary: 2 short everyday sentences explaining what is happening and why it matters.
+          - scientific_briefing: Exactly 3 crisp sentences with physical mechanism, decadal slopes, and p-values.
+        Resilient Fallback: If Ollama times out or is offline, engages _synthesize_deterministic_verdict().
         """
         var_ident = variable_meta.get("identifier", "Variable")
         var_name = variable_meta.get("name", var_ident)
@@ -246,16 +273,17 @@ class AIDetective:
         p_b = region_b_stats.get("p_value", 1.0)
         sig_b = region_b_stats.get("is_significant", False)
 
-        # 1. Attempt Local Ollama qwen3:8b Call
+        # 1. Attempt Local Ollama qwen3:8b Call for Structured JSON
         prompt = (
-            f"You are a NASA Earth System Trend Detective. Analyze the regional divergence below and output a crisp, objective 3-sentence scientific briefing. "
-            f"Do NOT include <think> tags, conversational pleasantries, or preamble. Output exactly three sentences:\n"
+            f"You are a dual-mode NASA Earth System Detective. Analyze the regional divergence below and output a STRICT JSON OBJECT with three keys: 'headline', 'plain_summary', and 'scientific_briefing'.\n"
             f"- Parameter: {var_name} ({var_ident}, units: {units})\n"
             f"- {label_a}: Sen's Slope = {slope_a:+.3f} {units}/decade, Mann-Kendall p = {p_a:.4f} (Significant: {sig_a})\n"
-            f"- {label_b}: Sen's Slope = {slope_b:+.3f} {units}/decade, Mann-Kendall p = {p_b:.4f} (Significant: {sig_b})\n"
-            f"Sentence 1 must state what variable changed and the physical Earth system mechanism driving divergence.\n"
-            f"Sentence 2 must state the exact decadal rates of change for {label_a} vs {label_b}.\n"
-            f"Sentence 3 must state whether the shifts are statistically significant (Mann-Kendall p < 0.05) versus seasonal noise."
+            f"- {label_b}: Sen's Slope = {slope_b:+.3f} {units}/decade, Mann-Kendall p = {p_b:.4f} (Significant: {sig_b})\n\n"
+            f"CRITICAL RULES:\n"
+            f"1. 'headline': 10-12 words max, 8th-grade reading level, human-impact takeaway. Zero statistical jargon.\n"
+            f"2. 'plain_summary': Exactly 2 short sentences explaining what is happening and why it matters in everyday language. Do NOT use technical words: Mann-Kendall, Sen's slope, p-value, Z-score, STL, NDVI, MODIS, GLDAS, MERRA-2.\n"
+            f"3. 'scientific_briefing': Exactly 3 sentences. Sentence 1 explains the physical Earth system mechanism driving divergence. Sentence 2 states the exact decadal rates for {label_a} vs {label_b} ({slope_a:+.3f} vs {slope_b:+.3f} {units}/decade). Sentence 3 states whether shifts are statistically significant under Mann-Kendall (p < 0.05) vs seasonal noise.\n"
+            f"Respond with ONLY valid JSON without markdown fences, explanation, or <think> tags."
         )
 
         try:
@@ -263,13 +291,13 @@ class AIDetective:
                 payload = {
                     "model": TARGET_OLLAMA_MODEL,
                     "messages": [
-                        {"role": "system", "content": "You are a NASA scientific data analyst. Respond in exactly 3 objective scientific sentences without <think> tags."},
+                        {"role": "system", "content": "You are a NASA scientific data analyst. Respond strictly in valid JSON matching the schema."},
                         {"role": "user", "content": prompt}
                     ],
                     "stream": False,
                     "options": {
                         "temperature": 0.2,
-                        "num_predict": 150
+                        "num_predict": 250
                     }
                 }
                 res = client.post(OLLAMA_CHAT_URL, json=payload)
@@ -277,10 +305,32 @@ class AIDetective:
                     raw_text = res.json().get("message", {}).get("content", "").strip()
                     # Strip any reasoning model <think> tags
                     clean_text = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL).strip()
-                    clean_text = re.sub(r'^(Here is the briefing|Scientific Briefing):\s*', '', clean_text, flags=re.IGNORECASE)
+                    clean_text = re.sub(r"^```(?:json)?\s*", "", clean_text, flags=re.IGNORECASE)
+                    clean_text = re.sub(r"\s*```$", "", clean_text).strip()
+
+                    try:
+                        parsed = json.loads(clean_text)
+                        if isinstance(parsed, dict) and "headline" in parsed and "plain_summary" in parsed and "scientific_briefing" in parsed:
+                            briefing_str = parsed["scientific_briefing"].strip()
+                            if len(briefing_str) > 30:
+                                logger.info("Successfully generated dual-mode verdict JSON using local qwen3:8b via Ollama.")
+                                return VerdictResult(
+                                    scientific_briefing=briefing_str,
+                                    headline=parsed["headline"].strip(),
+                                    plain_summary=parsed["plain_summary"].strip()
+                                )
+                    except Exception as parse_err:
+                        logger.debug(f"JSON parsing error from LLM output ({parse_err}). Falling back to text extractor.")
+
                     if len(clean_text) > 40:
-                        logger.info("Successfully generated scientific verdict using local qwen3:8b via Ollama.")
-                        return clean_text
+                        fallback_head, fallback_plain = self._generate_plain_story(
+                            var_ident, var_name, units, label_a, slope_a, label_b, slope_b
+                        )
+                        return VerdictResult(
+                            scientific_briefing=clean_text,
+                            headline=fallback_head,
+                            plain_summary=fallback_plain
+                        )
         except Exception as e:
             logger.info(f"Ollama qwen3:8b call offline or timed out ({e}). Engaging deterministic fallback synthesizer.")
 
@@ -299,6 +349,57 @@ class AIDetective:
             sig_b=sig_b
         )
 
+    def _generate_plain_story(
+        self,
+        var_ident: str,
+        var_name: str,
+        units: str,
+        label_a: str,
+        slope_a: float,
+        label_b: str,
+        slope_b: float
+    ) -> Tuple[str, str]:
+        """Generates plain-English headline and 2-sentence summary for Story Mode."""
+        var_up = var_ident.upper()
+        change_25_a = slope_a * 2.5
+        change_25_b = slope_b * 2.5
+        diff_25 = (slope_a - slope_b) * 2.5
+
+        if "LST" in var_up or "TS" in var_up or "T2M" in var_up:
+            if abs(diff_25) > 0.2:
+                headline = f"{label_a} is warming significantly faster than {label_b} over the past 25 years."
+            else:
+                headline = f"Surface heat patterns are noticeably shifting across {label_a} and {label_b}."
+            plain_summary = (
+                f"Ground temperatures have shifted by {change_25_a:+.1f} {units} in {label_a} compared to {change_25_b:+.1f} {units} in {label_b} across 25 years. "
+                f"Loss of tree cover reduces natural evaporative cooling, leaving land surfaces hotter and more vulnerable to heat stress."
+            )
+        elif "NDVI" in var_up:
+            headline = "Farms look greener on the surface, but underground water is running dry."
+            plain_summary = (
+                f"Plant canopy density has shifted by {change_25_a:+.2f} in {label_a} compared to {change_25_b:+.2f} in {label_b} over the last 25 years. "
+                f"While artificial irrigation makes crops appear vibrant from space, it often conceals severe water table depletion underneath."
+            )
+        elif "PRECIP" in var_up or "PRECTOT" in var_up:
+            headline = f"Rainfall patterns are drifting apart between {label_a} and {label_b}."
+            plain_summary = (
+                f"Rainfall trends show an overall change of {change_25_a:+.2f} {units} in {label_a} versus {change_25_b:+.2f} {units} in {label_b} across 25 years. "
+                f"Shifting seasonal storm tracks mean some farming basins face persistent drought while other areas see intensifying sudden downpours."
+            )
+        elif "MOIST" in var_up or "GWET" in var_up:
+            headline = f"Deep underground water reserves in {label_a} are dropping over time."
+            plain_summary = (
+                f"Root-zone water storage has shifted by {change_25_a:+.1f} {units} across 25 years of observations. "
+                f"Pumping groundwater faster than rainfall can replenish it creates a hidden, long-term water shortage for crops and communities."
+            )
+        else:
+            headline = f"Long-term observations show diverging environmental paths for {label_a} and {label_b}."
+            plain_summary = (
+                f"Over 25 years of records, {label_a} shifted by {change_25_a:+.2f} {units} compared to {change_25_b:+.2f} {units} in {label_b}. "
+                f"These contrasting trajectories show how local human activity and regional climate forces reshape the environment."
+            )
+        return headline, plain_summary
+
     def _synthesize_deterministic_verdict(
         self,
         var_ident: str,
@@ -312,10 +413,11 @@ class AIDetective:
         slope_b: float,
         p_b: float,
         sig_b: bool
-    ) -> str:
+    ) -> VerdictResult:
         """
         Deterministic, mathematically grounded fallback synthesis.
-        Populated with exact computed Sen's slopes and Mann-Kendall p-values.
+        Populated with exact computed Sen's slopes, Mann-Kendall p-values,
+        and plain-English Story Mode fields.
         """
         var_up = var_ident.upper()
 
@@ -364,7 +466,16 @@ class AIDetective:
                 f"Neither region demonstrates statistical significance at the alpha=0.05 threshold (Mann-Kendall p={p_a:.4f} and p={p_b:.4f}), indicating that natural decadal oscillations dominate the record."
             )
 
-        return f"{s1} {s2} {s3}"
+        scientific_briefing = f"{s1} {s2} {s3}"
+        headline, plain_summary = self._generate_plain_story(
+            var_ident, var_name, units, label_a, slope_a, label_b, slope_b
+        )
+
+        return VerdictResult(
+            scientific_briefing=scientific_briefing,
+            headline=headline,
+            plain_summary=plain_summary
+        )
 
     def generate_verdict(
         self,
@@ -373,13 +484,14 @@ class AIDetective:
         units: str,
         location_label: str,
         metrics: Dict[str, Any]
-    ) -> str:
-        """Single-series verdict synthesis (for /api/analyze/live)."""
+    ) -> VerdictResult:
+        """Single-series verdict synthesis (for /api/analyze/live) with Story Mode support."""
         slope_decade = metrics.get("sens_slope_per_decade", 0.0)
         p_val = metrics.get("p_value", 1.0)
         is_sig = metrics.get("is_significant", False)
         direction = metrics.get("trend_direction", "no trend")
         pct_shift = metrics.get("percent_shift", 0.0)
+        total_25 = slope_decade * 2.5
 
         if is_sig:
             s1 = (
@@ -427,7 +539,52 @@ class AIDetective:
                 f"extreme event frequency metrics to isolate sub-seasonal impacts."
             )
 
-        return f"{s1} {s2} {s3}"
+        scientific_briefing = f"{s1} {s2} {s3}"
+
+        # Story Mode Translation for single region
+        if is_sig:
+            if "T2M" in var_up or "LST" in var_up or "TS" in var_up:
+                headline = f"{location_label} is experiencing confirmed long-term warming."
+                plain_summary = (
+                    f"Temperatures have changed by {total_25:+.1f} {units} over the past 25 years. "
+                    f"This sustained heating impacts local agriculture, human comfort, and seasonal water cycles."
+                )
+            elif "NDVI" in var_up:
+                headline = f"Plant cover in {location_label} shows significant multi-decadal changes."
+                plain_summary = (
+                    f"Vegetation greenness has shifted by {total_25:+.2f} over the last 25 years. "
+                    f"These landscape transformations show how local land use and climate forcing reshape the natural environment."
+                )
+            elif "PRECIP" in var_up or "PRECTOT" in var_up:
+                headline = f"Rainfall patterns in {location_label} show a confirmed multi-decadal trend."
+                plain_summary = (
+                    f"Precipitation has changed by {total_25:+.2f} {units} across the 25-year record. "
+                    f"These shifts affect local water security, seasonal crop planning, and flood risks."
+                )
+            elif "MOIST" in var_up or "GWET" in var_up:
+                headline = f"Soil and underground water levels in {location_label} are persistently shifting."
+                plain_summary = (
+                    f"Water reserves have changed by {total_25:+.1f} {units} across the 25-year record. "
+                    f"Deep water drawdowns directly threaten future farming resilience and local drinking wells."
+                )
+            else:
+                headline = f"{location_label} exhibits a confirmed long-term Earth system trend."
+                plain_summary = (
+                    f"Values have shifted by {total_25:+.2f} {units} over the past 25 years. "
+                    f"This steady change indicates ongoing reorganizations in the regional environment."
+                )
+        else:
+            headline = f"{location_label} remains within normal year-to-year climate variation."
+            plain_summary = (
+                f"Observed changes over 25 years ({total_25:+.2f} {units}) remain inside typical natural swings. "
+                f"Current year-to-year fluctuations do not show a statistically permanent climate departure."
+            )
+
+        return VerdictResult(
+            scientific_briefing=scientific_briefing,
+            headline=headline,
+            plain_summary=plain_summary
+        )
 
     def generate_detective_guidance(self, query: str, recommendations: List[Dict[str, Any]]) -> str:
         """Produces natural language guidance on how to investigate the query."""

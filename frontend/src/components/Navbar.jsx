@@ -1,7 +1,7 @@
 import React from 'react';
-import { Globe, Satellite, Database, BookOpen, Activity, ShieldCheck } from 'lucide-react';
+import { Globe, Satellite, Database, BookOpen, Activity, ShieldCheck, FlaskConical } from 'lucide-react';
 
-export default function Navbar({ health, onOpenMethodology, onOpenEarthdataCloud }) {
+export default function Navbar({ health, onOpenMethodology, onOpenEarthdataCloud, uxMode = 'story', onChangeUxMode }) {
   const isHealthy = health?.status === 'healthy';
   const pillars = health?.data_pillars || {};
 
@@ -31,15 +31,29 @@ export default function Navbar({ health, onOpenMethodology, onOpenEarthdataCloud
 
         {/* Status Pills & Actions */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* Data Pillars Indicator */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-850 border border-slate-750 text-slate-300">
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-medium">4 Data Pillars:</span>
-            <span className="text-emerald-400 font-mono font-semibold">Active</span>
-            <span className="text-slate-500">|</span>
-            <span className="text-slate-400 font-mono">
-              {Object.values(pillars).reduce((acc, p) => acc + (p?.file_count || 0), 0)} datasets
-            </span>
+          {/* Dual-Mode Toggle: Story Mode vs Scientist Mode */}
+          <div className="flex items-center p-0.5 rounded-lg bg-slate-950 border border-slate-750">
+            <button
+              onClick={() => onChangeUxMode && onChangeUxMode('story')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                uxMode === 'story'
+                  ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>📖 Story Mode</span>
+            </button>
+            <button
+              onClick={() => onChangeUxMode && onChangeUxMode('scientist')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                uxMode === 'scientist'
+                  ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FlaskConical className="w-3 h-3" />
+              <span>🔬 Scientist Mode</span>
+            </button>
           </div>
 
           {/* NASA Earthdata Cloud Auth Badge */}

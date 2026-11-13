@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field, field_validator
 class VariableMetadata(BaseModel):
     identifier: str = Field(..., description="Short code identifier, e.g. T2M, PRECTOTCORR, TS")
     name: str = Field(..., description="Full descriptive name")
+    simple_label: Optional[str] = Field(default=None, description="Human-friendly plain-English label")
+    category_icon: Optional[str] = Field(default="heat", description="Category icon: heat | rain | vegetation | water")
     units: str = Field(..., description="Measurement units (e.g. °C, mm/month, fraction)")
     category: str = Field(..., description="Physical domain category")
     description: str = Field(..., description="Scientific definition of the variable")
@@ -57,7 +59,10 @@ class AnalysisResponse(BaseModel):
     raw_values: List[float]
     stl: STLDecompositionData
     metrics: TrendMetrics
-    detective_briefing: str = Field(..., description="3-sentence AI scientific detective verdict")
+    headline: Optional[str] = Field(default=None, description="Plain-English human impact takeaway for Story Mode")
+    plain_summary: Optional[str] = Field(default=None, description="2-sentence non-technical summary without jargon")
+    scientific_briefing: Optional[str] = Field(default=None, description="3-sentence technical physical mechanism briefing")
+    detective_briefing: str = Field(..., description="Backward-compatible AI scientific detective verdict")
 
 # --- Regional Comparison Schemas ---
 
@@ -86,6 +91,9 @@ class DivergenceMetrics(BaseModel):
     divergence_ratio: float = Field(..., description="Relative divergence magnitude ratio")
     opposite_trends: bool = Field(..., description="True if one region trends positive and other trends negative")
     divergence_severity: str = Field(..., description="'Extreme Divergence', 'Moderate Divergence', or 'Synchronous'")
+    headline: Optional[str] = Field(default=None, description="Plain-English regional contrast headline for Story Mode")
+    plain_summary: Optional[str] = Field(default=None, description="2-sentence non-technical summary of regional divergence")
+    scientific_briefing: Optional[str] = Field(default=None, description="3-sentence technical physical mechanism briefing")
     comparative_verdict: str = Field(..., description="Executive detective verdict explaining divergence")
 
 class RegionalCompareResponse(BaseModel):
@@ -122,6 +130,8 @@ class DetectiveQueryRequest(BaseModel):
 class RecommendedVariable(BaseModel):
     identifier: str
     name: str
+    simple_label: Optional[str] = None
+    category_icon: Optional[str] = None
     units: str
     category: str
     relevance_score: float = Field(..., ge=0.0, le=1.0)

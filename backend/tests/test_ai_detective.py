@@ -118,3 +118,51 @@ def test_generate_detective_briefing_resilient_fallback(ai_detective_instance):
     assert "Punjab is trending at -5.040 kg/m^2/decade" in verdict
     assert "p=0.0001" in verdict
     assert "Mann-Kendall" in verdict
+    # Story Mode fields verification
+    assert hasattr(verdict, "headline") and len(verdict.headline) > 5
+    assert hasattr(verdict, "plain_summary") and len(verdict.plain_summary) > 20
+
+def test_dual_mode_story_mode_forbidden_words(ai_detective_instance):
+    """Verifies plain_summary contains zero technical statistical jargon."""
+    meta = {"identifier": "LST_DAY", "name": "Land Surface Temperature", "units": "K"}
+    stats_a = {"sens_slope_per_decade": 0.28, "p_value": 0.012, "is_significant": True}
+    stats_b = {"sens_slope_per_decade": -0.05, "p_value": 0.45, "is_significant": False}
+
+    verdict = ai_detective_instance._synthesize_deterministic_verdict(
+        var_ident=meta["identifier"],
+        var_name=meta["name"],
+        units=meta["units"],
+        label_a="Rondonia",
+        slope_a=stats_a["sens_slope_per_decade"],
+        p_a=stats_a["p_value"],
+        sig_a=stats_a["is_significant"],
+        label_b="Central Amazon",
+        slope_b=stats_b["sens_slope_per_decade"],
+        p_b=stats_b["p_value"],
+        sig_b=stats_b["is_significant"]
+    )
+
+    forbidden = ["mann-kendall", "sen's slope", "p-value", "z-score", "stl", "ndvi", "modis", "gldas", "merra-2"]
+    plain_lower = verdict.plain_summary.lower()
+    for word in forbidden:
+        assert word not in plain_lower, f"Forbidden jargon word '{word}' found in plain_summary!"
+
+def test_dual_mode_single_series_verdict(ai_detective_instance):
+    """Verifies single-series generate_verdict provides headline and plain_summary."""
+    metrics = {
+        "sens_slope_per_decade": 0.35,
+        "p_value": 0.002,
+        "is_significant": True,
+        "trend_direction": "increasing",
+        "percent_shift": 4.2
+    }
+    verdict = ai_detective_instance.generate_verdict(
+        var_ident="T2M",
+        var_name="Surface Air Temperature",
+        units="°C",
+        location_label="Western Sahel",
+        metrics=metrics
+    )
+    assert hasattr(verdict, "headline") and len(verdict.headline) > 5
+    assert hasattr(verdict, "plain_summary") and len(verdict.plain_summary) > 20
+    assert hasattr(verdict, "scientific_briefing") and "Mann-Kendall" in verdict.scientific_briefing

@@ -17,7 +17,9 @@
         -50.0,
         50.0
       ],
-      "primary_sat_model": "NASA GMAO MERRA-2"
+      "primary_sat_model": "NASA GMAO MERRA-2",
+      "simple_label": "Surface Air Temperature",
+      "category_icon": "heat"
     },
     {
       "identifier": "T2M_MAX",
@@ -30,7 +32,9 @@
         -40.0,
         55.0
       ],
-      "primary_sat_model": "NASA GMAO MERRA-2"
+      "primary_sat_model": "NASA GMAO MERRA-2",
+      "simple_label": "Max Daytime Temperature",
+      "category_icon": "heat"
     },
     {
       "identifier": "T2M_MIN",
@@ -43,7 +47,9 @@
         -60.0,
         40.0
       ],
-      "primary_sat_model": "NASA GMAO MERRA-2"
+      "primary_sat_model": "NASA GMAO MERRA-2",
+      "simple_label": "Nighttime Temperature",
+      "category_icon": "heat"
     },
     {
       "identifier": "TS",
@@ -56,7 +62,9 @@
         -55.0,
         65.0
       ],
-      "primary_sat_model": "NASA MERRA-2 / CERES"
+      "primary_sat_model": "NASA MERRA-2 / CERES",
+      "simple_label": "Ground Skin Temperature",
+      "category_icon": "heat"
     },
     {
       "identifier": "PRECTOTCORR",
@@ -69,7 +77,9 @@
         0.0,
         1500.0
       ],
-      "primary_sat_model": "GPM / MERRA-2"
+      "primary_sat_model": "GPM / MERRA-2",
+      "simple_label": "Monthly Rainfall Total",
+      "category_icon": "rain"
     },
     {
       "identifier": "RH2M",
@@ -82,7 +92,9 @@
         0.0,
         100.0
       ],
-      "primary_sat_model": "MERRA-2"
+      "primary_sat_model": "MERRA-2",
+      "simple_label": "Air Humidity Level",
+      "category_icon": "rain"
     },
     {
       "identifier": "ALLSKY_SFC_SW_DWN",
@@ -95,7 +107,9 @@
         0.0,
         35.0
       ],
-      "primary_sat_model": "NASA CERES / FLASHFlux"
+      "primary_sat_model": "NASA CERES / FLASHFlux",
+      "simple_label": "Solar Energy Sunlight",
+      "category_icon": "heat"
     },
     {
       "identifier": "CLRSKY_SFC_SW_DWN",
@@ -108,7 +122,9 @@
         0.0,
         40.0
       ],
-      "primary_sat_model": "NASA CERES SYN1deg"
+      "primary_sat_model": "NASA CERES SYN1deg",
+      "simple_label": "Clear Sky Surface Shortwave Downward Irradiance",
+      "category_icon": "heat"
     },
     {
       "identifier": "ALLSKY_SFC_LW_DWN",
@@ -121,7 +137,9 @@
         100.0,
         500.0
       ],
-      "primary_sat_model": "NASA CERES"
+      "primary_sat_model": "NASA CERES",
+      "simple_label": "All Sky Surface Longwave Downward Irradiance",
+      "category_icon": "heat"
     },
     {
       "identifier": "EVPTRNS",
@@ -134,7 +152,9 @@
         0.0,
         15.0
       ],
-      "primary_sat_model": "MERRA-2 Catchment Model"
+      "primary_sat_model": "MERRA-2 Catchment Model",
+      "simple_label": "Total Evapotranspiration",
+      "category_icon": "heat"
     },
     {
       "identifier": "GWETTOP",
@@ -147,7 +167,9 @@
         0.0,
         1.0
       ],
-      "primary_sat_model": "NASA GLDAS / MERRA-2 Land"
+      "primary_sat_model": "NASA GLDAS / MERRA-2 Land",
+      "simple_label": "Surface Soil Wetness",
+      "category_icon": "water"
     },
     {
       "identifier": "GWETROOT",
@@ -160,7 +182,9 @@
         0.0,
         1.0
       ],
-      "primary_sat_model": "NASA GLDAS / MERRA-2"
+      "primary_sat_model": "NASA GLDAS / MERRA-2",
+      "simple_label": "Root-Zone Soil Water",
+      "category_icon": "water"
     },
     {
       "identifier": "GWETPROF",
@@ -173,7 +197,9 @@
         0.0,
         1.0
       ],
-      "primary_sat_model": "NASA Catchment Land Model"
+      "primary_sat_model": "NASA Catchment Land Model",
+      "simple_label": "Deep Aquifer Moisture",
+      "category_icon": "water"
     },
     {
       "identifier": "CLOUD_AMT",
@@ -186,7 +212,9 @@
         0.0,
         100.0
       ],
-      "primary_sat_model": "CERES / MODIS"
+      "primary_sat_model": "CERES / MODIS",
+      "simple_label": "Daytime Cloud Coverage",
+      "category_icon": "heat"
     },
     {
       "identifier": "WS10M",
@@ -199,7 +227,9 @@
         0.0,
         35.0
       ],
-      "primary_sat_model": "MERRA-2 2D IAU"
+      "primary_sat_model": "MERRA-2 2D IAU",
+      "simple_label": "High Wind Speed",
+      "category_icon": "rain"
     },
     {
       "identifier": "WS50M",
@@ -212,7 +242,9 @@
         0.0,
         45.0
       ],
-      "primary_sat_model": "MERRA-2 2D IAU"
+      "primary_sat_model": "MERRA-2 2D IAU",
+      "simple_label": "Wind Speed at 50 Meters",
+      "category_icon": "heat"
     },
     {
       "identifier": "PS",
@@ -225,7 +257,9 @@
         50.0,
         105.0
       ],
-      "primary_sat_model": "MERRA-2"
+      "primary_sat_model": "MERRA-2",
+      "simple_label": "Surface Air Pressure",
+      "category_icon": "rain"
     },
     {
       "identifier": "QV2M",
@@ -238,7 +272,9 @@
         0.0,
         30.0
       ],
-      "primary_sat_model": "MERRA-2"
+      "primary_sat_model": "MERRA-2",
+      "simple_label": "Atmospheric Moisture",
+      "category_icon": "rain"
     },
     {
       "identifier": "TO3",
@@ -251,7 +287,9 @@
         100.0,
         500.0
       ],
-      "primary_sat_model": "NASA OMI / MERRA-2"
+      "primary_sat_model": "NASA OMI / MERRA-2",
+      "simple_label": "Total Column Ozone",
+      "category_icon": "heat"
     },
     {
       "identifier": "AOD_550",
@@ -264,7 +302,9 @@
         0.0,
         3.5
       ],
-      "primary_sat_model": "NASA MODIS / MISR / MERRA-2"
+      "primary_sat_model": "NASA MODIS / MISR / MERRA-2",
+      "simple_label": "Aerosol Optical Depth at 550nm",
+      "category_icon": "heat"
     }
   ]
 }
