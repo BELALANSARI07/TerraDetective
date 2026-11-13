@@ -1,0 +1,270 @@
+{
+  "mission": "NASA POWER (Prediction of Worldwide Energy Resources)",
+  "version": "v2.4.0-api",
+  "source": "NASA Langley Research Center (LaRC) / MERRA-2 / GEOS-5 FP-IT",
+  "total_variables": 20,
+  "temporal_resolution": "Monthly / Daily",
+  "spatial_resolution": "0.5 x 0.625 degrees",
+  "variables": [
+    {
+      "identifier": "T2M",
+      "name": "Temperature at 2 Meters",
+      "units": "\u00b0C",
+      "category": "Thermal / Atmosphere",
+      "description": "Monthly average air temperature at 2 meters above ground level from MERRA-2 assimilation.",
+      "detective_hint": "Detects thermal warming anomalies, heat domes, and macro-climatic shift trends.",
+      "climatology_range": [
+        -50.0,
+        50.0
+      ],
+      "primary_sat_model": "NASA GMAO MERRA-2"
+    },
+    {
+      "identifier": "T2M_MAX",
+      "name": "Maximum Temperature at 2 Meters",
+      "units": "\u00b0C",
+      "category": "Thermal / Extremes",
+      "description": "Monthly mean of daily maximum 2-meter air temperature.",
+      "detective_hint": "Crucial for detecting heatwave intensification and agricultural heat stress limits.",
+      "climatology_range": [
+        -40.0,
+        55.0
+      ],
+      "primary_sat_model": "NASA GMAO MERRA-2"
+    },
+    {
+      "identifier": "T2M_MIN",
+      "name": "Minimum Temperature at 2 Meters",
+      "units": "\u00b0C",
+      "category": "Thermal / Extremes",
+      "description": "Monthly mean of daily minimum 2-meter air temperature.",
+      "detective_hint": "Tracks nocturnal warming rates; nocturnal warming often outpaces daytime warming.",
+      "climatology_range": [
+        -60.0,
+        40.0
+      ],
+      "primary_sat_model": "NASA GMAO MERRA-2"
+    },
+    {
+      "identifier": "TS",
+      "name": "Earth Skin Temperature",
+      "units": "\u00b0C",
+      "category": "Thermal / Surface",
+      "description": "Radiative surface skin temperature of the land or canopy surface.",
+      "detective_hint": "Direct analog to MODIS Land Surface Temperature (LST); responds instantaneously to deforestation.",
+      "climatology_range": [
+        -55.0,
+        65.0
+      ],
+      "primary_sat_model": "NASA MERRA-2 / CERES"
+    },
+    {
+      "identifier": "PRECTOTCORR",
+      "name": "Precipitation Corrected Total",
+      "units": "mm/month",
+      "category": "Hydrology / Precipitation",
+      "description": "Monthly bias-corrected precipitation accumulation combining satellite gauge calibrations.",
+      "detective_hint": "Validates meteorological drought against agricultural and hydrological drought indicators.",
+      "climatology_range": [
+        0.0,
+        1500.0
+      ],
+      "primary_sat_model": "GPM / MERRA-2"
+    },
+    {
+      "identifier": "RH2M",
+      "name": "Relative Humidity at 2 Meters",
+      "units": "%",
+      "category": "Atmosphere / Moisture",
+      "description": "Ratio of actual vapor pressure to saturation vapor pressure at 2m.",
+      "detective_hint": "Declines in RH combined with warming signal atmospheric drying and higher VPD.",
+      "climatology_range": [
+        0.0,
+        100.0
+      ],
+      "primary_sat_model": "MERRA-2"
+    },
+    {
+      "identifier": "ALLSKY_SFC_SW_DWN",
+      "name": "All Sky Surface Shortwave Downward Irradiance",
+      "units": "MJ/m^2/day",
+      "category": "Solar / Radiation",
+      "description": "Total solar insolation reaching Earth surface under all atmospheric conditions.",
+      "detective_hint": "Monitors solar dimming/brightening trends from aerosol and cloud cover variations.",
+      "climatology_range": [
+        0.0,
+        35.0
+      ],
+      "primary_sat_model": "NASA CERES / FLASHFlux"
+    },
+    {
+      "identifier": "CLRSKY_SFC_SW_DWN",
+      "name": "Clear Sky Surface Shortwave Downward Irradiance",
+      "units": "MJ/m^2/day",
+      "category": "Solar / Radiation",
+      "description": "Solar irradiance incident at the surface under clear sky aerosol conditions.",
+      "detective_hint": "Isolates atmospheric aerosol loading and orbital trends from cloud interference.",
+      "climatology_range": [
+        0.0,
+        40.0
+      ],
+      "primary_sat_model": "NASA CERES SYN1deg"
+    },
+    {
+      "identifier": "ALLSKY_SFC_LW_DWN",
+      "name": "All Sky Surface Longwave Downward Irradiance",
+      "units": "W/m^2",
+      "category": "Radiation / Greenhouse",
+      "description": "Thermal infrared radiation emitted downwards by atmospheric gases and clouds.",
+      "detective_hint": "Tracks surface greenhouse effect forcing and water vapor trap efficiency.",
+      "climatology_range": [
+        100.0,
+        500.0
+      ],
+      "primary_sat_model": "NASA CERES"
+    },
+    {
+      "identifier": "EVPTRNS",
+      "name": "Total Evapotranspiration",
+      "units": "mm/day",
+      "category": "Hydrology / Land-Atmosphere",
+      "description": "Water flux from soil evaporation and plant transpiration into the boundary layer.",
+      "detective_hint": "Collapses when soil moisture is exhausted or vegetative cover is stripped.",
+      "climatology_range": [
+        0.0,
+        15.0
+      ],
+      "primary_sat_model": "MERRA-2 Catchment Model"
+    },
+    {
+      "identifier": "GWETTOP",
+      "name": "Surface Soil Wetness (0-5cm)",
+      "units": "fraction",
+      "category": "Hydrology / Soil Moisture",
+      "description": "Degree of saturation in the top 5cm active soil layer (0 to 1).",
+      "detective_hint": "Quickly responds to recent precipitation and rapid evaporation episodes.",
+      "climatology_range": [
+        0.0,
+        1.0
+      ],
+      "primary_sat_model": "NASA GLDAS / MERRA-2 Land"
+    },
+    {
+      "identifier": "GWETROOT",
+      "name": "Root Zone Soil Wetness (0-100cm)",
+      "units": "fraction",
+      "category": "Hydrology / Soil Moisture",
+      "description": "Available soil water in the crop root zone (0-100cm depth fraction).",
+      "detective_hint": "Direct driver of agricultural productivity and forest drought survival.",
+      "climatology_range": [
+        0.0,
+        1.0
+      ],
+      "primary_sat_model": "NASA GLDAS / MERRA-2"
+    },
+    {
+      "identifier": "GWETPROF",
+      "name": "Profile Soil Moisture Saturation",
+      "units": "fraction",
+      "category": "Hydrology / Groundwater",
+      "description": "Deep profile soil moisture saturation fraction down to bedrock/water table.",
+      "detective_hint": "Reveals deep multi-year aquifer and bedrock hydrology depletion trends.",
+      "climatology_range": [
+        0.0,
+        1.0
+      ],
+      "primary_sat_model": "NASA Catchment Land Model"
+    },
+    {
+      "identifier": "CLOUD_AMT",
+      "name": "Daytime Cloud Coverage",
+      "units": "%",
+      "category": "Atmosphere / Clouds",
+      "description": "Total cloud fraction during daytime solar viewing conditions.",
+      "detective_hint": "Key factor modulating daytime surface temperatures and convective precipitation.",
+      "climatology_range": [
+        0.0,
+        100.0
+      ],
+      "primary_sat_model": "CERES / MODIS"
+    },
+    {
+      "identifier": "WS10M",
+      "name": "Wind Speed at 10 Meters",
+      "units": "m/s",
+      "category": "Dynamics / Boundary Layer",
+      "description": "Mean horizontal wind speed at 10 meters anemometer height.",
+      "detective_hint": "Identifies regional circulation shifts, atmospheric stilling, and wind erosion hazard.",
+      "climatology_range": [
+        0.0,
+        35.0
+      ],
+      "primary_sat_model": "MERRA-2 2D IAU"
+    },
+    {
+      "identifier": "WS50M",
+      "name": "Wind Speed at 50 Meters",
+      "units": "m/s",
+      "category": "Dynamics / Energy",
+      "description": "Mean horizontal wind speed at 50 meters hub height.",
+      "detective_hint": "Evaluates wind power trends and upper surface boundary momentum transfer.",
+      "climatology_range": [
+        0.0,
+        45.0
+      ],
+      "primary_sat_model": "MERRA-2 2D IAU"
+    },
+    {
+      "identifier": "PS",
+      "name": "Surface Pressure",
+      "units": "kPa",
+      "category": "Atmosphere / Barometric",
+      "description": "Atmospheric pressure measured at surface topography elevation.",
+      "detective_hint": "Detects monsoon trough deepening, subtropical ridge migration, and anticyclonic blocks.",
+      "climatology_range": [
+        50.0,
+        105.0
+      ],
+      "primary_sat_model": "MERRA-2"
+    },
+    {
+      "identifier": "QV2M",
+      "name": "Specific Humidity at 2 Meters",
+      "units": "g/kg",
+      "category": "Atmosphere / Water Vapor",
+      "description": "Mass of water vapor per unit mass of moist air.",
+      "detective_hint": "Absolute measure of moisture availability independent of ambient temperature.",
+      "climatology_range": [
+        0.0,
+        30.0
+      ],
+      "primary_sat_model": "MERRA-2"
+    },
+    {
+      "identifier": "TO3",
+      "name": "Total Column Ozone",
+      "units": "Dobson Units",
+      "category": "Atmosphere / Chemistry",
+      "description": "Total atmospheric column ozone abundance in Dobson Units (DU).",
+      "detective_hint": "Tracks stratospheric ozone recovery, UV-B surface flux risk, and Brewer-Dobson circulation.",
+      "climatology_range": [
+        100.0,
+        500.0
+      ],
+      "primary_sat_model": "NASA OMI / MERRA-2"
+    },
+    {
+      "identifier": "AOD_550",
+      "name": "Aerosol Optical Depth at 550nm",
+      "units": "dimensionless",
+      "category": "Atmosphere / Aerosols",
+      "description": "Extinction of solar radiation at 550nm due to dust, smoke, sulfates, and nitrates.",
+      "detective_hint": "Crucial for detecting biomass burning smoke plumes, dust storms, and industrial haze.",
+      "climatology_range": [
+        0.0,
+        3.5
+      ],
+      "primary_sat_model": "NASA MODIS / MISR / MERRA-2"
+    }
+  ]
+}
