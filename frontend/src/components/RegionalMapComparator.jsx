@@ -182,7 +182,7 @@ export default function RegionalMapComparator({
   }, [regionB.latitude, regionB.longitude]);
 
   return (
-    <div className="rounded-2xl bg-slate-900 border border-slate-750 p-4 shadow-xl space-y-4">
+    <div className="rounded-2xl bg-slate-900 border border-slate-750 p-4 shadow-xl space-y-4 isolate relative z-0">
       {/* Control Strip */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export default function RegionalMapComparator({
               {regionA.latitude.toFixed(2)}°, {regionA.longitude.toFixed(2)}°
             </span>
           </div>
-          <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner">
+          <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner isolate z-0">
             <div ref={mapRefA} className="w-full h-full" />
             <div className="absolute top-2 left-2 z-[400] bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-cyan-300 border border-slate-800">
               Region A Primary Pin
@@ -272,7 +272,7 @@ export default function RegionalMapComparator({
               {regionB.latitude.toFixed(2)}°, {regionB.longitude.toFixed(2)}°
             </span>
           </div>
-          <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner">
+          <div className="h-56 rounded-xl overflow-hidden border border-slate-800 relative shadow-inner isolate z-0">
             <div ref={mapRefB} className="w-full h-full" />
             <div className="absolute top-2 left-2 z-[400] bg-slate-950/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-mono text-rose-300 border border-slate-800">
               Region B Comparator Pin

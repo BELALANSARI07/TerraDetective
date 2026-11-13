@@ -30,6 +30,13 @@
 .leaflet-container {
   background-color: #0B111A !important;
   font-family: inherit !important;
+  z-index: 1 !important;
+}
+.leaflet-pane {
+  z-index: 10 !important;
+}
+.leaflet-top, .leaflet-bottom {
+  z-index: 20 !important;
 }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
   background: #182436 !important;

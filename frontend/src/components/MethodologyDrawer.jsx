@@ -5,8 +5,8 @@ export default function MethodologyDrawer({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl bg-slate-900 border-l border-slate-750 h-full overflow-y-auto p-6 shadow-2xl flex flex-col justify-between space-y-6">
+    <div className="fixed inset-0 z-[9999] flex justify-end bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-2xl bg-slate-900 border-l border-slate-750 h-full overflow-y-auto p-6 shadow-2xl flex flex-col justify-between space-y-6 relative z-10">
         <div>
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-800">
