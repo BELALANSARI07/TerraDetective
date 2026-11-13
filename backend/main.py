@@ -20,13 +20,16 @@ from schemas import (
     DataPillarStatus,
     STLDecompositionData,
     TrendMetrics,
-    DivergenceMetrics
+    DivergenceMetrics,
+    EarthdataDiscoveryResponse,
+    EarthdataGranuleItem
 )
 from data_loader import DataLoader
 from stats_engine import StatsEngine
 from ai_detective import AIDetective
 from nasa_power_client import NasaPowerClient
 from earthdata_client import EarthdataClient
+from nasa_cloud_client import NASACloudClient
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("terradetective.api")
@@ -55,6 +58,7 @@ catalog_vars = data_loader.get_catalog_variables()
 ai_detective = AIDetective(catalog_vars)
 nasa_client = NasaPowerClient()
 earthdata_client = EarthdataClient()
+nasa_cloud_client = NASACloudClient()
 
 # --- Paradox Presets Definition ---
 PARADOX_PRESETS = [
@@ -190,13 +194,35 @@ def get_health():
         data_pillars=pillars_status,
         total_cached_points=sum(len(df) for df in data_loader.cached_dfs.values()),
         local_llm=ai_detective.probe_local_llm(),
-        earthdata=earthdata_client.verify_connection()
+        earthdata=nasa_cloud_client.verify_auth_status()
     )
 
 @app.get("/api/earthdata/status")
 def get_earthdata_status():
     """Returns NASA Earthdata Login authentication and connection status."""
-    return earthdata_client.verify_connection()
+    return nasa_cloud_client.verify_auth_status()
+
+@app.get("/api/earthdata/discover", response_model=EarthdataDiscoveryResponse)
+def discover_earthdata_granules(
+    keyword: str = Query("MOD11A2", description="NASA science keyword or short name (e.g. MOD11A2, MOD13A3, GPM_3IMERGM, GLDAS_NOAH025_M, SWOT)"),
+    min_lon: float = Query(-65.0, ge=-180.0, le=180.0),
+    min_lat: float = Query(-15.0, ge=-90.0, le=90.0),
+    max_lon: float = Query(-55.0, ge=-180.0, le=180.0),
+    max_lat: float = Query(-5.0, ge=-90.0, le=90.0),
+    limit: int = Query(6, ge=1, le=20)
+):
+    """
+    Live NASA Common Metadata Repository (CMR) Granule Search & OPeNDAP Subset Probe.
+    Uses the authenticated NASA Earthdata Bearer Token to discover granules and direct HTTPS/OPeNDAP access links.
+    """
+    return nasa_cloud_client.discover_granules(
+        keyword=keyword,
+        min_lon=min_lon,
+        min_lat=min_lat,
+        max_lon=max_lon,
+        max_lat=max_lat,
+        limit=limit
+    )
 
 @app.get("/api/variables")
 def get_variables(q: Optional[str] = None):

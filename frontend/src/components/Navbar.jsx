@@ -1,7 +1,7 @@
 import React from 'react';
 import { Globe, Satellite, Database, BookOpen, Activity, ShieldCheck } from 'lucide-react';
 
-export default function Navbar({ health, onOpenMethodology }) {
+export default function Navbar({ health, onOpenMethodology, onOpenEarthdataCloud }) {
   const isHealthy = health?.status === 'healthy';
   const pillars = health?.data_pillars || {};
 
@@ -42,13 +42,28 @@ export default function Navbar({ health, onOpenMethodology }) {
             </span>
           </div>
 
-          {/* NASA Earthdata Auth Badge */}
-          {health?.earthdata?.authenticated && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 border border-emerald-600/50 text-emerald-300">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-medium text-[11px]">NASA Earthdata:</span>
-              <span className="font-mono font-bold text-white text-[11px]">{health.earthdata.username}</span>
-            </div>
+          {/* NASA Earthdata Cloud Auth Badge */}
+          {health?.earthdata?.authenticated ? (
+            <button 
+              onClick={onOpenEarthdataCloud}
+              title={`Click to explore live NASA CMR & OPeNDAP granules (${health.earthdata.username || 'Active'})`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-500/60 text-emerald-300 shadow-sm shadow-emerald-950/40 transition-all cursor-pointer active:scale-95"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span className="font-semibold text-[11px] tracking-tight">Earthdata Cloud Live Link:</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 font-mono font-bold text-[10px] border border-emerald-500/30">
+                Authenticated
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={onOpenEarthdataCloud}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-400 transition-all cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <span className="font-medium text-[11px]">Earthdata Cloud:</span>
+              <span className="font-mono text-[10px] text-amber-400">Offline / Guest</span>
+            </button>
           )}
 
           {/* Engine Health */}

@@ -7,9 +7,10 @@
 [![React: 18](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF.svg?logo=vite&logoColor=white)](https://vitejs.dev)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![Pytest: 25 Passed](https://img.shields.io/badge/Pytest-25%2F25%20Passing-10B981.svg)](https://docs.pytest.org)
+[![Pytest: 32 Passed](https://img.shields.io/badge/Pytest-32%2F32%20Passing-10B981.svg)](https://docs.pytest.org)
 [![Local AI: all-MiniLM-L6-v2](https://img.shields.io/badge/Dense%20Matcher-all--MiniLM--L6--v2-8B5CF6.svg)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 [![Local LLM: Ollama qwen3:8b](https://img.shields.io/badge/Local%20LLM-Ollama%20qwen3%3A8b-EC4899.svg)](https://ollama.ai)
+[![NASA Earthdata: Authenticated](https://img.shields.io/badge/NASA%20Earthdata-Cloud%20Bearer%20Active-0284C7.svg)](https://urs.earthdata.nasa.gov)
 
 ---
 
@@ -129,7 +130,7 @@ cd C:\Users\HP\.gemini\antigravity\scratch\terradetective
 # Install backend Python dependencies
 python -m pip install -r backend/requirements.txt
 
-# Run the complete automated test suite (25/25 passing)
+# Run the complete automated test suite (32/32 passing)
 python -m pytest backend/tests -v
 ```
 

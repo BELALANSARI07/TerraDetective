@@ -149,3 +149,28 @@ class HealthResponse(BaseModel):
     total_cached_points: int
     local_llm: Optional[Dict[str, Any]] = None
     earthdata: Optional[Dict[str, Any]] = None
+
+# --- NASA Earthdata Cloud & CMR Discovery Schemas ---
+
+class EarthdataGranuleItem(BaseModel):
+    granule_id: Optional[str] = None
+    title: str
+    dataset_short_name: str
+    time_start: Optional[str] = None
+    time_end: Optional[str] = None
+    granule_size_mb: float = 0.0
+    download_url: Optional[str] = None
+    opendap_url: Optional[str] = None
+    browse_url: Optional[str] = None
+    cloud_hosted: bool = False
+
+class EarthdataDiscoveryResponse(BaseModel):
+    status: str
+    authenticated: bool
+    username: Optional[str] = None
+    badge_text: str
+    keyword: str
+    bounding_box: List[float]
+    total_granules_found: int
+    granules: List[EarthdataGranuleItem]
+    opendap_probe: Dict[str, Any]

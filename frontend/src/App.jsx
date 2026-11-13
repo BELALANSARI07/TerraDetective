@@ -6,6 +6,7 @@ import PlotlyTimeseriesChart from './components/PlotlyTimeseriesChart';
 import MetricsBentoGrid from './components/MetricsBentoGrid';
 import DivergenceComparatorCard from './components/DivergenceComparatorCard';
 import MethodologyDrawer from './components/MethodologyDrawer';
+import EarthdataCloudModal from './components/EarthdataCloudModal';
 import { Layers, ArrowRightLeft, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [selectedPresetId, setSelectedPresetId] = useState('amazon_deforestation_warming');
   const [selectedVariable, setSelectedVariable] = useState('LST_DAY');
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
+  const [isEarthdataCloudOpen, setIsEarthdataCloudOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -155,6 +157,7 @@ export default function App() {
       <Navbar
         health={health}
         onOpenMethodology={() => setIsMethodologyOpen(true)}
+        onOpenEarthdataCloud={() => setIsEarthdataCloudOpen(true)}
       />
 
       {/* Main Workbench Body */}
@@ -253,6 +256,13 @@ export default function App() {
       <MethodologyDrawer
         isOpen={isMethodologyOpen}
         onClose={() => setIsMethodologyOpen(false)}
+      />
+
+      {/* NASA Earthdata Cloud & CMR Granule Explorer Modal */}
+      <EarthdataCloudModal
+        isOpen={isEarthdataCloudOpen}
+        onClose={() => setIsEarthdataCloudOpen(false)}
+        health={health}
       />
 
       {/* Footer */}
