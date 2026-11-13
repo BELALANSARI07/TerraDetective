@@ -35,9 +35,9 @@ const TILE_LAYERS = {
     attribution: 'Esri, Maxar, Earthstar Geographics, USDA, USGS'
   },
   dark: {
-    name: '🌌 Deep Slate (CartoDB)',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; CartoDB, OpenStreetMap'
+    name: '🌌 Deep Slate (ESRI Dark)',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Esri, HERE, DeLorme, MapmyIndia, &copy; OpenStreetMap contributors'
   },
   topo: {
     name: '🗺️ Topographic (OpenTopoMap)',
