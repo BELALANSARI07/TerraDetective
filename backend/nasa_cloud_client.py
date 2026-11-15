@@ -65,8 +65,8 @@ class NASACloudClient:
     using the user's EARTHDATA_TOKEN Bearer token.
     """
     def __init__(self, token: Optional[str] = None):
-        self.token = token if token is not None else os.getenv("EARTHDATA_TOKEN", "").strip()
-        self.username = os.getenv("EARTHDATA_USER", "belal_ansari").strip()
+        self.token = token if token is not None else (os.getenv("EARTHDATA_BEARER_TOKEN") or os.getenv("EARTHDATA_TOKEN", "")).strip().strip('"').strip("'")
+        self.username = os.getenv("EARTHDATA_USER", "belal_ansari").strip().strip('"')
         self._auth_cache: Optional[Dict[str, Any]] = None
 
     def get_safe_headers(self, url: str) -> Dict[str, str]:

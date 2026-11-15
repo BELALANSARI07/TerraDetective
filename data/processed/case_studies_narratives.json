@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "generated_at": "2026-11-14T05:02:38.540958+00:00",
+    "workbench_name": "TerraDetective",
+    "version": "1.0.0",
+    "engine": "Dual-Mode AI Explainer (qwen3:8b + Grounded Deterministic Fallback)",
+    "total_cases": 3
+  },
+  "cases": {
+    "case_1_monsoon_paradox": {
+      "case_id": "case_1_monsoon_paradox",
+      "variable_id": "precipitation",
+      "ai_source": "deterministic_fallback",
+      "generated_at": "2026-11-14T05:02:38.540958+00:00",
+      "student_story_mode": {
+        "headline": "The Monsoon Paradox: A Deluge in the Hills vs. Drought in the Rain Shadow",
+        "what_changed": "Over the 25-year study period (2001\u20132025), Marathwada received an average of only 80.7 mm/month with a slight variance of +2.79 mm/decade (estimated total change: +6.9 mm/month). In stark contrast, Northeast India received massive monsoon rainfall averaging 281.1 mm/month with a trend of +10.27 mm/decade, frequently spiking above 1,345 mm/month during peak summer months.",
+        "detective_clue_why": "Both regions share the same South Asian summer monsoon air mass, yet their fates are opposite. The secret lies in the terrain: Northeast India's funnel-shaped valleys force incoming moisture from the Bay of Bengal straight up the Meghalaya and Khasi Hills, triggering world-record orographic deluge. Marathwada, however, is trapped on the leeward side of the Western Ghats mountain ridge\u2014a rain shadow where descending air compresses, warms, and dries out, causing recurrent agricultural drought.",
+        "confidence_plain_english": "High scientific certainty: We are 99.77% confident in Marathwada's rainfall trend (p=0.00232) and 99.01% confident in Northeast India's trend (p=0.00991).",
+        "try_this_next": "Examine the peak monsoon months (July\u2013August) on the chart to see extreme flood spikes in Northeast India, then inspect root-zone soil wetness to see how prolonged drought affects Marathwada farming."
+      },
+      "scientist_research_mode": {
+        "technical_abstract": "Empirical multi-decadal trend analysis of NASA GPM IMERG Final Run monthly precipitation (GPM_3IMERGM_07, 2001\u20132025) evaluating the South Asian summer monsoon orographic precipitation disparity between the rain-shadow semi-arid Deccan plateau (Marathwada: 19.25\u00b0N, 76.25\u00b0E) and the Meghalaya orographic funnel (Northeast India: 25.25\u00b0N, 91.50\u00b0E).",
+        "statistical_interpretation": "Non-parametric Mann-Kendall evaluation on STL-deseasonalized series reveals positive median trend slopes for both regions: Marathwada (Sen's slope = +2.7889 mm/decade, p=2.3200e-03) and Northeast India (Sen's slope = +10.2733 mm/decade, p=9.9100e-03). However, parametric OLS regression displays divergence (slope difference = -7.484 mm/decade, z=0.50, p=6.1730e-01) driven by extreme positive skewness and flood anomalies in early satellite records (max 1,345.6 mm/month in 2004).",
+        "physical_mechanisms": "Orographic convective triggering vs. subsiding rain-shadow dynamics. The Bay of Bengal monsoon low-level jet impinges orthogonally on the Meghalaya plateau and Khasi Hills, generating intense moist adiabatic ascent. Conversely, the Western Ghats induce dry adiabatic descent and moisture starvation over Marathwada, amplifying boundary layer vapor pressure deficit (VPD) and agricultural drought frequency.",
+        "methodological_caveats": "GPM IMERG 0.1\u00b0 grid assimilation incorporates satellite radar, microwave radiometer, and GPCC gauge calibrations. Complex orographic terrain can induce radar shadow bias; precipitation rate was converted from mm/hr using exact days-in-month accounting for leap years."
+      },
+      "ground_truth_stats": {
+        "region_a": {
+          "label": "Marathwada (Drought-Prone Rain Shadow)",
+          "sens_slope_per_decade": 2.7889,
+          "p_value": 0.00232,
+          "confidence_pct": 99.77
+        },
+        "region_b": {
+          "label": "Northeast India (Cherrapunji / Meghalaya Monsoon Belt)",
+          "sens_slope_per_decade": 10.2733,
+          "p_value": 0.00991,
+          "confidence_pct": 99.01
+        },
+        "divergence_detected": true,
+        "slope_difference_per_decade": -7.4844
+      }
+    },
+    "case_2_land_thermal_paradox": {
+      "case_id": "case_2_land_thermal_paradox",
+      "variable_id": "LST_Day",
+      "ai_source": "deterministic_fallback",
+      "generated_at": "2026-11-14T05:02:38.540958+00:00",
+      "student_story_mode": {
+        "headline": "The Land Thermal Paradox: Deforestation Heats the Amazon While Irrigation Cools Punjab",
+        "what_changed": "Over 25 years (2001\u20132025), cleared tropical rainforest in Rond\u00f4nia experienced a steady daytime heating rate of +0.374 \u00b0C per decade (a cumulative 25-year warming of +0.93 \u00b0C). Meanwhile, intensive agricultural farmland in Punjab experienced an opposing cooling trend of -0.376 \u00b0C per decade (a cumulative cooling of -0.94 \u00b0C)!",
+        "detective_clue_why": "This is the Earth System's ultimate energy paradox! When dense Amazonian rainforest is slashed and burned, the loss of the tall tree canopy stops the forest from 'sweating' moisture (evapotranspiration). The bare, sunlit pasture converts solar radiation into scorching sensible heat (+4\u00b0C to +8\u00b0C in dry season). In Punjab, millions of farmers pump groundwater through canals and tubewells into flooded rice paddies and wheat fields. This massive artificial irrigation causes intense evaporative cooling that cools the daytime land surface even as global greenhouse gases warm the atmosphere!",
+        "confidence_plain_english": "Overwhelming statistical proof: We are 99.97% confident in the Amazon's warming trend (p=3.3000e-04) and 99.96% confident in Punjab's cooling trend (p=4.4000e-04).",
+        "try_this_next": "Toggle on the 'Deseasonalized' view to see the smooth multi-decadal trend line, then investigate how Amazon dry-season heat spikes line up with forest canopy loss in Case 3."
+      },
+      "scientist_research_mode": {
+        "technical_abstract": "Comparative empirical investigation of daytime radiative surface skin temperature trajectories using MODIS/Terra 8-Day 1km Land Surface Temperature (MOD11A2.061, 2001\u20132025) across two contrasting anthropogenic biomes: the deforestation frontier of Rond\u00f4nia (-10.875\u00b0S, -61.93\u00b0W) and the Green Revolution agricultural corridor of Punjab (30.901\u00b0N, 75.8573\u00b0E).",
+        "statistical_interpretation": "Statistically significant divergence with opposing signs verified at alpha=0.05. Rond\u00f4nia exhibits monotonic warming with Sen's slope = +0.3743 \u00b0C/decade (Mann-Kendall p=3.3000e-04, Seasonal MK p=0.0223). Punjab exhibits daytime surface cooling with Sen's slope = -0.3756 \u00b0C/decade (Mann-Kendall p=4.4000e-04, Seasonal MK p=0.0018). Net thermal divergence rate: +0.7499 \u00b0C/decade.",
+        "physical_mechanisms": "Land-Use Land-Cover Change (LULCC) surface energy balance partitioning. Rainforest clearance in Rond\u00f4nia decreases aerodynamic roughness length, suppresses root-water uptake, and collapses latent heat flux (LE), partitioning net radiation into sensible heat flux (H) and ground storage. In Punjab, intensive flood irrigation across Kharif (rice) and Rabi (wheat) cycles elevates soil wetness to near-saturation, driving high Bowen-ratio evaporative cooling that suppresses daytime radiometric skin temperature.",
+        "methodological_caveats": "469 invalid or cloud-contaminated observations (0.0 K retrievals) were cleansed. 33 Amazon rainy-season months obscured by persistent convective cloud cover were linearly interpolated to maintain monthly continuity. MOD11A2 measures daytime skin radiometric temperature at ~10:30 local solar time, distinct from 2m ambient screen air temperature."
+      },
+      "ground_truth_stats": {
+        "region_a": {
+          "label": "Rond\u00f4nia Amazon Deforestation Arc",
+          "sens_slope_per_decade": 0.3743,
+          "p_value": 0.00033,
+          "confidence_pct": 99.97
+        },
+        "region_b": {
+          "label": "Punjab Intensive Irrigated Cropland Belt",
+          "sens_slope_per_decade": -0.3756,
+          "p_value": 0.00044,
+          "confidence_pct": 99.96
+        },
+        "divergence_detected": true,
+        "slope_difference_per_decade": 0.7499
+      }
+    },
+    "case_3_vegetation_paradox": {
+      "case_id": "case_3_vegetation_paradox",
+      "variable_id": "NDVI",
+      "ai_source": "deterministic_fallback",
+      "generated_at": "2026-11-14T05:02:38.540958+00:00",
+      "student_story_mode": {
+        "headline": "The Plant Greenness Paradox: Fragile Forests vs. Human-Engineered Greening",
+        "what_changed": "Over 2001\u20132025, Rond\u00f4nia's rainforest canopy greenness declined by -0.0157 NDVI index units per decade (a total decline of -0.039), while Punjab's agricultural greenness surged upward by +0.0294 per decade (a total increase of +0.073)!",
+        "detective_clue_why": "How can cultivated farmland green faster than the world's greatest rainforest? In Rond\u00f4nia, bulldozers and fire fragment dense, dark-green evergreen canopy into pastures that turn brown during the dry season. In Punjab, human engineering\u2014high-yielding crop seeds, synthetic nitrogen fertilizers, and intensive irrigation\u2014creates two massive photosynthetic greening peaks every single year (wheat in winter, rice in summer).",
+        "confidence_plain_english": "Virtually certain: We are 99.99% confident in the Amazon's canopy degradation (p=2.0380e-06) and 99.99% confident in Punjab's human-made greening trend (p=0.0000e+00).",
+        "try_this_next": "Inspect the two greenness peaks per year in Punjab's seasonal cycle curve and compare them to the single tropical wet-dry pulse in the Amazon."
+      },
+      "scientist_research_mode": {
+        "technical_abstract": "Decadal vegetation canopy dynamics evaluated through MODIS/Terra Monthly 1km Normalized Difference Vegetation Index (MOD13A3.061, 2001\u20132025) comparing equatorial deforestation degradation in Rond\u00f4nia against agrarian intensification in Punjab.",
+        "statistical_interpretation": "Highly significant opposing trends verified (divergence z=-8.43, p=0.0000e+00). Rond\u00f4nia displays persistent negative trend: Sen's slope = -0.0157/decade (Mann-Kendall p=2.0380e-06, Seasonal MK p=5.5088e-06). Punjab exhibits strong positive greening: Sen's slope = +0.0294/decade (Mann-Kendall p=0.0000e+00, Seasonal MK p=0.0000e+00). 95% OLS confidence intervals do not overlap: Rond\u00f4nia [-0.0025, -0.0007] vs. Punjab [+0.0028, +0.0044].",
+        "physical_mechanisms": "Canopy phenological restructuring. Rainforest fragmentation replaces perennial evergreen forest with shallow-rooted cattle pasture, expanding dry-season brown-down amplitude. In Punjab, Green Revolution agronomic inputs create bimodal peak photosynthetic activity (Rabi wheat in Feb\u2013March and Kharif rice in Sep\u2013October) sustained by deep groundwater extraction.",
+        "methodological_caveats": "43 monthly observations flagged as cloudy_interpolated in MOD13A3 MODLAND QA. NDVI exhibits asymptotic saturation over closed-canopy tropical rainforests (NDVI > 0.75), which may under-represent internal canopy structural degradation."
+      },
+      "ground_truth_stats": {
+        "region_a": {
+          "label": "Rond\u00f4nia Amazon Deforestation Arc",
+          "sens_slope_per_decade": -0.0157,
+          "p_value": 2.03805e-06,
+          "confidence_pct": 99.99
+        },
+        "region_b": {
+          "label": "Punjab Intensive Irrigated Cropland Belt",
+          "sens_slope_per_decade": 0.0294,
+          "p_value": 0.0,
+          "confidence_pct": 99.99
+        },
+        "divergence_detected": true,
+        "slope_difference_per_decade": -0.0451
+      }
+    }
+  }
+}

@@ -14,8 +14,8 @@ EARTHDATA_LOGIN_URL = "https://urs.earthdata.nasa.gov"
 
 class EarthdataClient:
     def __init__(self, token: Optional[str] = None):
-        self.token = token or os.getenv("EARTHDATA_TOKEN", "").strip()
-        self.username = os.getenv("EARTHDATA_USER", "NASA Earthdata User").strip()
+        self.token = token or (os.getenv("EARTHDATA_BEARER_TOKEN") or os.getenv("EARTHDATA_TOKEN", "")).strip().strip('"').strip("'")
+        self.username = os.getenv("EARTHDATA_USER", "NASA Earthdata User").strip().strip('"')
         self.status_cache: Optional[Dict[str, Any]] = None
 
     def get_auth_headers(self) -> Dict[str, str]:

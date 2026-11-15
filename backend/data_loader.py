@@ -6,6 +6,17 @@ from typing import Dict, List, Any, Optional, Tuple
 import pandas as pd
 import numpy as np
 
+try:
+    from services.world_gazetteer import reverse_geocode, get_world_location
+except ImportError:
+    try:
+        from world_gazetteer import reverse_geocode, get_world_location
+    except ImportError:
+        def reverse_geocode(lat, lon, max_degrees=6.0):
+            return None
+        def get_world_location(token):
+            return None
+
 logger = logging.getLogger("terradetective.data_loader")
 
 MISSING_VALUE_FLAGS = {-999, -999.0, -9999, -9999.0, -9999.9, -999.9}
@@ -58,6 +69,180 @@ def enrich_variable_dict(v: Dict[str, Any]) -> Dict[str, Any]:
             default_icon = "water"
         v["category_icon"] = enrich.get("category_icon", default_icon)
     return v
+
+def extract_smart_geolocation_label(
+    filename: Optional[str] = None,
+    header_lines: Optional[List[str]] = None,
+    default_label: str = "Uploaded Dataset A"
+) -> Tuple[str, Optional[float], Optional[float]]:
+    """
+    Intelligently determines the human-readable region_label using a 3-step fallback strategy:
+    1. Filename Coordinate Regex (Giovanni Style: e.g. 75E_18N_77E_20N -> 'Uploaded: 18°N-20°N, 75°E-77°E')
+    2. File Header Metadata Extraction (AppEEARS / Giovanni Header: Title, Region, Location)
+    3. Clean Fallback ('Uploaded Dataset A' / 'Uploaded Dataset B', rejecting raw ugly filenames)
+    """
+    def _parse_coords(s: str) -> Optional[Tuple[str, float, float]]:
+        if not s:
+            return None
+
+        # Pattern 1: Giovanni Bounding Box Lon_Lat_Lon_Lat (e.g. 75E_18N_77E_20N or 75.5E_18.2N_77.5E_20.8N)
+        bbox_lon_lat = re.search(
+            r'(?:[._\b]|^)(\d{1,3}(?:\.\d+)?)\s*([EWew])_(\d{1,2}(?:\.\d+)?)\s*([NSns])_(\d{1,3}(?:\.\d+)?)\s*([EWew])_(\d{1,2}(?:\.\d+)?)\s*([NSns])(?:[._\b]|$)',
+            s
+        )
+        if bbox_lon_lat:
+            lon1, lon1_d, lat1, lat1_d, lon2, lon2_d, lat2, lat2_d = bbox_lon_lat.groups()
+            lat1_f = -float(lat1) if lat1_d.upper() == 'S' else float(lat1)
+            lat2_f = -float(lat2) if lat2_d.upper() == 'S' else float(lat2)
+            lon1_f = -float(lon1) if lon1_d.upper() == 'W' else float(lon1)
+            lon2_f = -float(lon2) if lon2_d.upper() == 'W' else float(lon2)
+            if abs(lat1_f) <= 90 and abs(lat2_f) <= 90 and abs(lon1_f) <= 180 and abs(lon2_f) <= 180:
+                c_lat = round((lat1_f + lat2_f) / 2.0, 4)
+                c_lon = round((lon1_f + lon2_f) / 2.0, 4)
+                # Show actual name of location, not degrees
+                geo = reverse_geocode(c_lat, c_lon)
+                if geo and geo.get("name"):
+                    return f"Uploaded: {geo['name']}", c_lat, c_lon
+                lat_str = f"{lat1}°{lat1_d.upper()}-{lat2}°{lat2_d.upper()}"
+                lon_str = f"{lon1}°{lon1_d.upper()}-{lon2}°{lon2_d.upper()}"
+                return f"Uploaded: {lat_str}, {lon_str}", c_lat, c_lon
+
+        # Pattern 2: Bounding Box Lat_Lon_Lat_Lon (e.g. 18N_75E_20N_77E)
+        bbox_lat_lon = re.search(
+            r'(?:[._\b]|^)(\d{1,2}(?:\.\d+)?)\s*([NSns])_(\d{1,3}(?:\.\d+)?)\s*([EWew])_(\d{1,2}(?:\.\d+)?)\s*([NSns])_(\d{1,3}(?:\.\d+)?)\s*([EWew])(?:[._\b]|$)',
+            s
+        )
+        if bbox_lat_lon:
+            lat1, lat1_d, lon1, lon1_d, lat2, lat2_d, lon2, lon2_d = bbox_lat_lon.groups()
+            lat1_f = -float(lat1) if lat1_d.upper() == 'S' else float(lat1)
+            lat2_f = -float(lat2) if lat2_d.upper() == 'S' else float(lat2)
+            lon1_f = -float(lon1) if lon1_d.upper() == 'W' else float(lon1)
+            lon2_f = -float(lon2) if lon2_d.upper() == 'W' else float(lon2)
+            if abs(lat1_f) <= 90 and abs(lat2_f) <= 90 and abs(lon1_f) <= 180 and abs(lon2_f) <= 180:
+                c_lat = round((lat1_f + lat2_f) / 2.0, 4)
+                c_lon = round((lon1_f + lon2_f) / 2.0, 4)
+                # Show actual name of location, not degrees
+                geo = reverse_geocode(c_lat, c_lon)
+                if geo and geo.get("name"):
+                    return f"Uploaded: {geo['name']}", c_lat, c_lon
+                lat_str = f"{lat1}°{lat1_d.upper()}-{lat2}°{lat2_d.upper()}"
+                lon_str = f"{lon1}°{lon1_d.upper()}-{lon2}°{lon2_d.upper()}"
+                return f"Uploaded: {lat_str}, {lon_str}", c_lat, c_lon
+
+        # Pattern 3: Single point coordinate (e.g. 18.5N_76.2E or 76.2E_18.5N)
+        pt_lat_lon = re.search(
+            r'(?:[._\b]|^)(\d{1,2}(?:\.\d+)?)\s*([NSns])_(\d{1,3}(?:\.\d+)?)\s*([EWew])(?:[._\b]|$)',
+            s
+        )
+        if pt_lat_lon:
+            lat, lat_d, lon, lon_d = pt_lat_lon.groups()
+            c_lat = -float(lat) if lat_d.upper() == 'S' else float(lat)
+            c_lon = -float(lon) if lon_d.upper() == 'W' else float(lon)
+            if abs(c_lat) <= 90 and abs(c_lon) <= 180:
+                geo = reverse_geocode(c_lat, c_lon)
+                if geo and geo.get("name"):
+                    return f"Uploaded: {geo['name']}", c_lat, c_lon
+                return f"Uploaded: {lat}°{lat_d.upper()}, {lon}°{lon_d.upper()}", c_lat, c_lon
+
+        pt_lon_lat = re.search(
+            r'(?:[._\b]|^)(\d{1,3}(?:\.\d+)?)\s*([EWew])_(\d{1,2}(?:\.\d+)?)\s*([NSns])(?:[._\b]|$)',
+            s
+        )
+        if pt_lon_lat:
+            lon, lon_d, lat, lat_d = pt_lon_lat.groups()
+            c_lat = -float(lat) if lat_d.upper() == 'S' else float(lat)
+            c_lon = -float(lon) if lon_d.upper() == 'W' else float(lon)
+            if abs(c_lat) <= 90 and abs(c_lon) <= 180:
+                geo = reverse_geocode(c_lat, c_lon)
+                if geo and geo.get("name"):
+                    return f"Uploaded: {geo['name']}", c_lat, c_lon
+                return f"Uploaded: {lat}°{lat_d.upper()}, {lon}°{lon_d.upper()}", c_lat, c_lon
+
+        return None
+
+    # Step 1: Check Filename Coordinate Regex
+    if filename:
+        coord_res = _parse_coords(filename)
+        if coord_res:
+            return coord_res
+
+    # Also check if default_label is a filename containing coordinates
+    if default_label:
+        coord_res = _parse_coords(default_label)
+        if coord_res:
+            return coord_res
+
+    # Step 2: Check Header Metadata Extraction (Title:, Region:, Location:)
+    if header_lines:
+        for line in header_lines[:25]:
+            clean = re.sub(r'^[#;/\s]+', '', line).strip()
+            # First check if the header line contains coordinates
+            coord_res = _parse_coords(clean)
+            if coord_res:
+                return coord_res
+
+            m = re.match(r'^(?:Title|Region|Location)\s*:\s*(.+)$', clean, re.IGNORECASE)
+            if not m:
+                continue
+
+            val = m.group(1).strip().strip('"\'')
+            if not val:
+                continue
+
+            # Check for coordinates inside val
+            coord_res = _parse_coords(val)
+            if coord_res:
+                return coord_res
+
+            # Parenthesized region: e.g. "Area-Averaged Time Series (Marathwada)" -> "Marathwada"
+            paren_match = re.search(r'\(([^)]+)\)', val)
+            if paren_match:
+                candidate = paren_match.group(1).strip().strip('"\'')
+                # Exclude trivial units like (mm) or (deg C)
+                if len(candidate) > 1 and not re.match(r'^(?:mm|degc|c|k|index|kg/m\^?2|percent|%)$', candidate, re.IGNORECASE):
+                    c_res = _parse_coords(candidate)
+                    if c_res:
+                        return c_res
+                    loc = get_world_location(candidate)
+                    if loc and loc.get("lat") is not None and loc.get("lon") is not None:
+                        return f"Uploaded: {loc['name']}", float(loc['lat']), float(loc['lon'])
+                    return f"Uploaded: {candidate}", None, None
+
+            # "over <Region>" or "for <Region>"
+            over_match = re.search(r'\b(?:over|for|in|at)\s+([A-Za-z0-9\s,\-\._]+)$', val, re.IGNORECASE)
+            if over_match:
+                candidate = over_match.group(1).strip().strip('"\'')
+                if len(candidate) > 2 and not any(k in candidate.lower() for k in ["time series", "time-series", "daily", "monthly"]):
+                    loc = get_world_location(candidate)
+                    if loc and loc.get("lat") is not None and loc.get("lon") is not None:
+                        return f"Uploaded: {loc['name']}", float(loc['lat']), float(loc['lon'])
+                    return f"Uploaded: {candidate}", None, None
+
+            # If line is Region: or Location:, use val directly
+            if re.match(r'^(?:Region|Location)\s*:\s*', clean, re.IGNORECASE):
+                candidate = re.sub(r'\s+time\s*series$', '', val, flags=re.IGNORECASE).strip()
+                if candidate:
+                    loc = get_world_location(candidate)
+                    if loc and loc.get("lat") is not None and loc.get("lon") is not None:
+                        return f"Uploaded: {loc['name']}", float(loc['lat']), float(loc['lon'])
+                    return f"Uploaded: {candidate}", None, None
+
+            # If Title: is not generic boilerplate
+            if not any(k in val.lower() for k in ["area-averaged", "time series", "time-series", "giovanni", "appeears"]):
+                loc = get_world_location(val)
+                if loc and loc.get("lat") is not None and loc.get("lon") is not None:
+                    return f"Uploaded: {loc['name']}", float(loc['lat']), float(loc['lon'])
+                return f"Uploaded: {val}", None, None
+
+    # Step 3: Clean Fallback (rejecting raw filenames)
+    if default_label:
+        is_filename = any(default_label.lower().endswith(ext) for ext in [".csv", ".txt", ".tsv", ".dat"]) or default_label.startswith("g4.areaAvg")
+        if not is_filename and default_label not in {"Uploaded Dataset", "Uploaded Dataset A", "Uploaded Dataset B"}:
+            return default_label, None, None
+
+    fallback = default_label if default_label in {"Uploaded Dataset A", "Uploaded Dataset B"} else "Uploaded Dataset A"
+    return fallback, None, None
+
 
 class DataLoader:
     def __init__(self, data_dir: Optional[str] = None):
@@ -372,3 +557,137 @@ class DataLoader:
             "units": "kg/m^2"
         }
         return dates, values, meta
+
+    @staticmethod
+    def parse_uploaded_csv(
+        content: str | bytes,
+        default_label: str = "Uploaded Dataset A",
+        filename: Optional[str] = None,
+    ) -> pd.DataFrame:
+        """
+        Dynamically parses user/judge uploaded CSV strings or bytes from
+        NASA Giovanni, AppEEARS, NOAA, or generic CSV formats.
+        Skips metadata header lines, extracts smart geographic metadata,
+        identifies date and value columns, cleans missing flags, and produces
+        a standardized DataFrame.
+        """
+        import io
+        if isinstance(content, bytes):
+            try:
+                text = content.decode("utf-8")
+            except UnicodeDecodeError:
+                text = content.decode("latin-1", errors="ignore")
+        else:
+            text = str(content)
+
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        if not lines:
+            raise ValueError("Uploaded CSV file is empty.")
+
+        # Detect header line
+        header_idx = 0
+        for idx, line in enumerate(lines[:35]):
+            if line.startswith("#"):
+                continue
+            parts = [p.strip().strip('"').strip("'") for p in line.split(",")]
+            if len(parts) >= 2 and not parts[0].endswith(":"):
+                first_tok = parts[0].lower()
+                if first_tok in {"time", "date", "datetime", "category", "id", "latitude", "lat", "region", "year"}:
+                    header_idx = idx
+                    break
+                if all(":" not in p for p in parts[:2]):
+                    header_idx = idx
+                    break
+
+        header_lines = lines[:header_idx] if header_idx > 0 else lines[:25]
+
+        # Smart Geolocation Extractor (3-step strategy)
+        region_label, ext_lat, ext_lon = extract_smart_geolocation_label(
+            filename=filename,
+            header_lines=header_lines,
+            default_label=default_label,
+        )
+
+        csv_clean_text = "\n".join(lines[header_idx:])
+        df = pd.read_csv(io.StringIO(csv_clean_text))
+        df.columns = [c.strip().strip('"').strip("'") for c in df.columns]
+
+        # Clean null flags
+        for col in df.select_dtypes(include=[np.number]).columns:
+            df[col] = df[col].replace(list(MISSING_VALUE_FLAGS), np.nan)
+
+        # Detect Date / Time column
+        date_candidates = [c for c in df.columns if any(k in c.lower() for k in ["date", "time", "year_month", "timestamp", "period"])]
+        if date_candidates:
+            date_col = date_candidates[0]
+        else:
+            # Fallback to column 0
+            date_col = df.columns[0]
+
+        df["date_parsed"] = pd.to_datetime(df[date_col], errors="coerce")
+        df = df.dropna(subset=["date_parsed"]).sort_values("date_parsed")
+        df["date"] = df["date_parsed"].dt.strftime("%Y-%m-01")
+
+        # Detect Region ID column if present (e.g. ID, Region, Region_ID)
+        region_candidates = [c for c in df.columns if c.lower() in {"id", "region", "region_id", "station", "location"}]
+        if region_candidates and df[region_candidates[0]].nunique() > 1:
+            region_col = region_candidates[0]
+            df["region_id"] = df[region_col].astype(str).str.strip()
+            df["region_label"] = df["region_id"]
+        else:
+            df["region_id"] = region_label
+            df["region_label"] = region_label
+
+        # Detect primary numeric value column
+        exclude_names = {"lat", "lon", "latitude", "longitude", "year", "month", "day", "qc", "quality", "date_parsed"}
+        num_cols = [c for c in df.columns if c not in {date_col, "date", "region_id", "region_label"} and c.lower() not in exclude_names and pd.api.types.is_numeric_dtype(df[c])]
+        
+        if not num_cols:
+            # Try converting first non-date column to numeric
+            candidate_cols = [c for c in df.columns if c not in {date_col, "date", "region_id", "region_label", "date_parsed"}]
+            if not candidate_cols:
+                raise ValueError("Could not find any numeric measurement column in uploaded CSV.")
+            val_col = candidate_cols[0]
+            df["value"] = pd.to_numeric(df[val_col], errors="coerce")
+        else:
+            val_col = num_cols[0]
+            df["value"] = df[val_col]
+
+        df = df.dropna(subset=["value"])
+        if df.empty:
+            raise ValueError("All values in uploaded CSV were null or invalid.")
+
+        # Unit & variable name detection
+        var_name = val_col
+        unit = "units"
+        if "lst" in val_col.lower() or "temp" in val_col.lower() or "t2m" in val_col.lower():
+            if df["value"].mean() > 200:
+                df["value"] = df["value"] - 273.15  # Convert Kelvin to Celsius
+            unit = "°C"
+        elif "ndvi" in val_col.lower() or "evi" in val_col.lower():
+            unit = "index"
+        elif "precip" in val_col.lower() or "rain" in val_col.lower() or "imerg" in val_col.lower():
+            unit = "mm/month"
+        elif "moist" in val_col.lower() or "soil" in val_col.lower() or "gwet" in val_col.lower():
+            unit = "kg/m²"
+
+        df["variable_id"] = val_col
+        df["variable_name"] = var_name
+        df["unit"] = unit
+
+        # Latitude and Longitude resolution
+        has_lat = any(c.lower() in ("lat", "latitude") for c in df.columns)
+        if has_lat:
+            lat_col = [c for c in df.columns if c.lower() in ("lat", "latitude")][0]
+            df["lat"] = pd.to_numeric(df[lat_col], errors="coerce").fillna(ext_lat if ext_lat is not None else 0.0)
+        else:
+            df["lat"] = float(ext_lat if ext_lat is not None else 0.0)
+
+        has_lon = any(c.lower() in ("lon", "longitude") for c in df.columns)
+        if has_lon:
+            lon_col = [c for c in df.columns if c.lower() in ("lon", "longitude")][0]
+            df["lon"] = pd.to_numeric(df[lon_col], errors="coerce").fillna(ext_lon if ext_lon is not None else 0.0)
+        else:
+            df["lon"] = float(ext_lon if ext_lon is not None else 0.0)
+
+        return df[["date", "value", "region_id", "region_label", "variable_id", "variable_name", "unit", "lat", "lon"]]

@@ -1,0 +1,159 @@
+{
+  "workbench_name": "TerraDetective",
+  "description": "Earth System Trend & Regional Paradox Workbench for NASA Space Apps Challenge",
+  "challenge_track": "Be An Earth System Trend Detective!",
+  "version": "1.0.0",
+  "unified_schema": [
+    "case_id",
+    "region_id",
+    "region_label",
+    "lat",
+    "lon",
+    "date",
+    "year",
+    "month",
+    "variable_id",
+    "variable_name",
+    "unit",
+    "value",
+    "qc_flag",
+    "source_product"
+  ],
+  "cases": [
+    {
+      "case_id": "case_1_monsoon_paradox",
+      "title": "The Monsoon Paradox: Orographic Deluge vs. Rain-Shadow Drought",
+      "subtitle": "Marathwada vs. Northeast India (2001\u20132025)",
+      "paradox_statement": "Despite sharing the same South Asian summer monsoon air mass, why does Northeast India receive up to 1,350+ mm/month causing extreme flash flooding, while Marathwada (just 1,500 km away) suffers persistent agro-meteorological drought (<10 mm/month)?",
+      "scientific_driver": "Western Ghats rain-shadow effect vs. Bay of Bengal orographic funneling into Khasi Hills.",
+      "variable_id": "precipitation",
+      "variable_name": "Monthly Precipitation Accumulation",
+      "unit": "mm/month",
+      "temporal_range": {
+        "start": "2001-01-01",
+        "end": "2025-09-01",
+        "resolution": "monthly"
+      },
+      "source_product": "NASA Giovanni GPM IMERG Final (GPM_3IMERGM_07)",
+      "regions": [
+        {
+          "region_id": "Marathwada",
+          "region_label": "Marathwada (Drought-Prone Rain Shadow)",
+          "latitude": 19.25,
+          "longitude": 76.25,
+          "bounding_box": [
+            75.0,
+            18.0,
+            77.5,
+            20.5
+          ],
+          "expected_climatology": "Semi-arid rain shadow, erratic monsoon onset, high drought frequency"
+        },
+        {
+          "region_id": "NortheastIndia",
+          "region_label": "Northeast India (Cherrapunji / Meghalaya Monsoon Belt)",
+          "latitude": 25.25,
+          "longitude": 91.5,
+          "bounding_box": [
+            90.5,
+            24.5,
+            92.5,
+            26.0
+          ],
+          "expected_climatology": "World-record orographic monsoon rainfall, extreme convective cloud bursts"
+        }
+      ],
+      "detective_clues": [
+        "Compare peak monsoon months (July-August) across both regions.",
+        "Analyze rainfall variability: Marathwada exhibits coefficient of variation >45%.",
+        "Correlate dry season precipitation deficits with regional water stress."
+      ],
+      "data_files": {
+        "csv": "case_1_monsoon_paradox.csv",
+        "parquet": "case_1_monsoon_paradox.parquet"
+      }
+    },
+    {
+      "case_id": "case_2_land_thermal_paradox",
+      "title": "Land Thermal Paradox: Deforestation Warming vs. Irrigation Cooling",
+      "subtitle": "Rond\u00f4nia Amazon Arc vs. Punjab Irrigated Belt (2001\u20132025)",
+      "paradox_statement": "Why is daytime Land Surface Temperature accelerating upward across cleared Amazon rainforest, whereas Punjab's intensive agricultural belt exhibits strong evaporative cooling anomalies despite substantial atmospheric greenhouse warming?",
+      "scientific_driver": "Canopy clearance in Rond\u00f4nia eliminates latent heat evaporative cooling, converting solar energy to sensible surface heat (+4\u00b0C to +8\u00b0C). In Punjab, canal and tubewell irrigation amplifies latent evaporative flux, suppressing daytime skin temperatures.",
+      "variable_id": "LST_Day",
+      "variable_name": "Land Surface Temperature (Daytime)",
+      "unit": "\u00b0C",
+      "temporal_range": {
+        "start": "2001-01-01",
+        "end": "2025-12-01",
+        "resolution": "monthly"
+      },
+      "source_product": "MODIS Terra 8-Day 1km LST (MOD11A2.061) Monthly Mean",
+      "regions": [
+        {
+          "region_id": "RondoniaAmazonArc",
+          "region_label": "Rond\u00f4nia Amazon Deforestation Arc",
+          "latitude": -10.875,
+          "longitude": -61.93,
+          "expected_climatology": "Persistent tropical warming anomaly, dry season LST spikes >40\u00b0C"
+        },
+        {
+          "region_id": "PunjabIrrigatedBelt",
+          "region_label": "Punjab Intensive Irrigated Cropland Belt",
+          "latitude": 30.901,
+          "longitude": 75.8573,
+          "expected_climatology": "Subtropical continental climate, strong summer evaporative cooling dip"
+        }
+      ],
+      "detective_clues": [
+        "Notice the dry season (August-October) LST surge in Rond\u00f4nia post-2005.",
+        "Contrast with Punjab's June pre-monsoon heat vs August irrigation crop canopy cooling.",
+        "Verify cloud-filtered retrievals: zero 0.0 K artifacts remain."
+      ],
+      "data_files": {
+        "csv": "case_2_land_thermal_paradox.csv",
+        "parquet": "case_2_land_thermal_paradox.parquet"
+      }
+    },
+    {
+      "case_id": "case_3_vegetation_paradox",
+      "title": "Vegetation Greenness Paradox: Canopy Degradation vs. Human-Engineered Greening",
+      "subtitle": "Rond\u00f4nia Amazon Arc vs. Punjab Irrigated Belt (2001\u20132025)",
+      "paradox_statement": "Why has dense pristine rainforest canopy in Rond\u00f4nia experienced fragmentation and dry-season brown-downs, while Punjab's semi-arid terrain shows sustained bimodal vegetation greenness peaks?",
+      "scientific_driver": "Amazon arc deforestation replaces perennial evergreen canopy (NDVI ~0.75-0.85) with cattle pasture and soy fields (NDVI fluctuating down to ~0.30 in dry season). Punjab uses Green Revolution double-cropping (Kharif rice + Rabi wheat) to artificially drive high bimodal NDVI peaks.",
+      "variable_id": "NDVI",
+      "variable_name": "Normalized Difference Vegetation Index",
+      "unit": "index",
+      "temporal_range": {
+        "start": "2001-01-01",
+        "end": "2025-12-01",
+        "resolution": "monthly"
+      },
+      "source_product": "MODIS Terra Monthly 1km Vegetation Indices (MOD13A3.061)",
+      "regions": [
+        {
+          "region_id": "RondoniaAmazonArc",
+          "region_label": "Rond\u00f4nia Amazon Deforestation Arc",
+          "latitude": -10.875,
+          "longitude": -61.93,
+          "expected_climatology": "Degraded tropical forest transitioning to pasture seasonal amplitude"
+        },
+        {
+          "region_id": "PunjabIrrigatedBelt",
+          "region_label": "Punjab Intensive Irrigated Cropland Belt",
+          "latitude": 30.901,
+          "longitude": 75.8573,
+          "expected_climatology": "Distinct dual-season peaks (Feb-Mar wheat, Sep-Oct rice)"
+        }
+      ],
+      "detective_clues": [
+        "Inspect the seasonal cycle amplitude in Rond\u00f4nia expanding over time.",
+        "Observe the strict bimodal cropping pattern in Punjab.",
+        "Cloud-interpolated flags are transparently logged for QC audit."
+      ],
+      "data_files": {
+        "csv": "case_3_vegetation_paradox.csv",
+        "parquet": "case_3_vegetation_paradox.parquet"
+      }
+    }
+  ]
+}

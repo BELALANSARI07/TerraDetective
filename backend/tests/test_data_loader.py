@@ -67,3 +67,45 @@ def test_extract_gldas_hydrology(data_loader_instance):
     dates, vals, meta = data_loader_instance.extract_gldas_timeseries("PunjabIrrigatedBelt")
     assert len(vals) >= 200
     assert all(v > 0.0 for v in vals)
+
+def test_parse_uploaded_csv_giovanni_bbox_extraction():
+    """Verifies that Giovanni coordinate bounding box in filename is extracted as region_label with location name."""
+    csv_content = """time,GPM_3IMERGM_07_precipitation
+2001-01-01,12.5
+2001-02-01,15.8
+2001-03-01,22.1
+"""
+    filename = "g4.areaAvgTimeSeries.GPM_3IMERGM_07_precipitation.20010101-20241231.75E_18N_77E_20N.csv"
+    df = DataLoader.parse_uploaded_csv(csv_content, filename=filename)
+    assert df["region_label"].iloc[0] == "Uploaded: Marathwada, India"
+    assert df["region_id"].iloc[0] == "Uploaded: Marathwada, India"
+    assert df["lat"].iloc[0] == 19.0
+    assert df["lon"].iloc[0] == 76.0
+    assert len(df) == 3
+
+def test_parse_uploaded_csv_header_metadata_extraction():
+    """Verifies that Title/Region header metadata in CSV is extracted as region_label with location name."""
+    csv_content = """# Giovanni - The Bridge Between Data and Science
+# Title: Area-Averaged Time Series (Marathwada)
+# Units: mm/month
+time,GPM_3IMERGM_07_precipitation
+2001-01-01,12.5
+2001-02-01,15.8
+"""
+    df = DataLoader.parse_uploaded_csv(csv_content, filename="random_upload.csv")
+    assert df["region_label"].iloc[0] == "Uploaded: Marathwada, India"
+    assert df["lat"].iloc[0] == 19.25
+    assert df["lon"].iloc[0] == 76.25
+
+def test_parse_uploaded_csv_clean_fallback():
+    """Verifies that when no geo-data exists, clean fallback label is used instead of raw filename."""
+    csv_content = """time,temperature
+2001-01-01,25.4
+2001-02-01,26.1
+"""
+    df_a = DataLoader.parse_uploaded_csv(csv_content, filename="raw_ugly_long_file_name_12345.csv", default_label="Uploaded Dataset A")
+    assert df_a["region_label"].iloc[0] == "Uploaded Dataset A"
+
+    df_b = DataLoader.parse_uploaded_csv(csv_content, filename="raw_ugly_long_file_name_67890.csv", default_label="Uploaded Dataset B")
+    assert df_b["region_label"].iloc[0] == "Uploaded Dataset B"
+
