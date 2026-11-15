@@ -16,5 +16,9 @@ frontend/node_modules/
 node_modules/
 .DS_Store
 
+# Agent & Local IDE Tooling
+.agents/
+.agent/
+
 # Ignore local Vite dev builds if necessary, but keep dist if you want it served directly from the repo.
 # For this project, we will KEEP frontend/dist/ so Azure App Service can serve it instantly.
